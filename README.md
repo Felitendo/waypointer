@@ -1,62 +1,135 @@
-<img src="./.github/logo.png" width="80" />
+<p align="center">
+  <img width="128" src="res/icons/hicolor/scalable/apps/de.felitendo.waypointer.svg" alt="Waypointer">
+</p>
 
-# TinyHand
+<h1 align="center">Waypointer</h1>
 
-[![Latest release](https://img.shields.io/github/v/release/nilbuild/tinyhand?display_name=tag&sort=semver&cacheSeconds=3600)](https://github.com/nilbuild/tinyhand/releases/latest)
-[![Platform: macOS](https://img.shields.io/badge/platform-macOS-lightgrey)](https://tinyhand.app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+<h3 align="center">A tiny hand on a stick that points at things on your screen.</h3>
 
-A tiny hand on a stick that points at things on your Mac screen.
+<p align="center">
+  The Linux version of <a href="https://github.com/nilbuild/tinyhand">TinyHand</a> for macOS.<br>
+  Made for KDE Plasma on Wayland. Works on other Wayland desktops too, with fewer extras.
+</p>
 
-<img src="./.github/banner.jpg" alt="TinyHand: a tiny hand for your Mac" />
+<h5 align="center">
+  <a href="#install">Install</a> |
+  <a href="#how-to-use">How to use</a> |
+  <a href="#desktops">Desktops</a> |
+  <a href="#automation">Automation</a> |
+  <a href="https://github.com/Felitendo/waypointer/issues">Report a bug</a>
+</h5>
 
-[![Download for macOS](https://img.shields.io/badge/Download_for_macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/nilbuild/tinyhand/releases/latest/download/TinyHand.dmg)
-[![Visit website](https://img.shields.io/badge/Visit_website-ffffff?style=for-the-badge&logo=safari&logoColor=black)](https://tinyhand.app)
+<p align="center">
+  <img src="res/screenshots/pointer.png" alt="The lavender hand on its stick points at a row of the Waypointer settings" width="720">
+</p>
 
-macOS 13 or later, Apple Silicon and Intel.
+Turn it on and your cursor becomes a toy hand on a stick. Click to tap, drag to draw, and
+nothing underneath gets clicked. Great for screen shares, recordings and presentations.
 
 ## Install
 
-Open `TinyHand.dmg`, drag TinyHand to Applications and allow **Accessibility** when asked. It needs that to turn your clicks into taps. TinyHand updates itself.
+There is no package yet. Build it from source:
 
-## Use
+```bash
+sudo pacman -S --needed rust libxkbcommon wayland
+```
+
+```bash
+git clone https://github.com/Felitendo/waypointer.git
+```
+
+```bash
+cd waypointer && make && sudo make install
+```
+
+Or, without root, for your user only: `make install PREFIX=~/.local`.
+
+Then start **Waypointer** from the app menu. It lives in the system tray and opens at login
+from then on (switch that off in the settings).
+
+## How to use
 
 | | |
 |---|---|
-| Click the menu bar icon, or **⌃⌥H** | Turn the pointer on or off |
-| Right-click the menu bar icon | Menu and Settings |
+| Click the tray icon, or **Ctrl+Alt+H** | Turn the pointer on or off |
+| Right-click the tray icon | Menu and settings |
 | Click | Tap (nothing underneath gets clicked) |
 | Hold and drag | Draw on the screen |
-| Hold **⌘** while drawing | Add an arrowhead to the end of the line |
-| **⌃⌥X** | Clear the drawing |
+| Hold **Ctrl** while drawing | End the line in an arrowhead |
+| Hold **Alt** | Click for real: the hand steps aside |
+| Double-tap **Shift** | Clicks go through to the apps and the hand stays, until you double-tap again |
+| **Ctrl+Alt+X** | Clear the drawing |
 | **Esc** | Clear everything and turn the pointer off |
 
-While the pointer is on, a small toolbar at the bottom of the screen lets you pick one of
-36 hands or a laser dot, mute the tap sound, or exit.
+While the pointer is on, a small toolbar at the bottom of the screen lets you pick one of 36
+hands or a laser dot, change the ink colour, set the volume of the tap sound, or exit. The panels stay
+usable with the normal cursor.
+
+You can make your own hand too: describe it, let ChatGPT or another image tool draw it, and
+pick the PNG. Waypointer checks it and puts it on a stick.
+
+<p align="center">
+  <img src="res/screenshots/settings.png" alt="The Pointers page of the settings: the toolbar's pointers and all 37 to pick from" width="640">
+</p>
+
+Every setting is in the settings window: shortcuts, which key clicks for real, the toolbar,
+the pointer size, the ink, the tap sound and its volume.
+
+## Desktops
+
+| | KDE Plasma (Wayland) | Hyprland, Sway, other Wayland | GNOME |
+|---|:---:|:---:|:---:|
+| Hand, laser, drawing, toolbar | ✓ | ✓ | not yet |
+| Global shortcuts and Esc | ✓ | bind `waypointer toggle` yourself | |
+| Hold Alt, double-tap Shift | ✓ | | |
+| Panels stay usable | ✓ | | |
+
+The extras on KDE come from KWin: KGlobalAccel for the shortcuts, its keystate protocol for
+Alt, Ctrl and Shift, and small KWin scripts that say where the panels and the cursor are.
+GNOME has no layer-shell, which Waypointer needs to draw over other windows.
 
 ## Automation
 
-Launchers like Raycast or Alfred, and shell scripts, can control TinyHand with
-`tinyhand://` links. Use `open -g` so TinyHand doesn't take focus:
+The `waypointer` command drives the running app, and starts it when it isn't running:
 
-```sh
-open -g tinyhand://toggle
+```bash
+waypointer toggle
 ```
 
-| Link | Action |
+| Command | Action |
 |---|---|
-| `tinyhand://on`, `tinyhand://off`, `tinyhand://toggle` | Turn the pointer on, off, or flip it |
-| `tinyhand://clear` | Clear the drawing |
-| `tinyhand://style/<id>` | Switch to a hand (or `laser`) and turn the pointer on |
-| `tinyhand://sound/on`, `/off`, `/toggle` | Tap sound for the current pointer |
+| `on`, `off`, `toggle` | Turn the pointer on, off, or flip it |
+| `clear` | Clear the drawing |
+| `style <id>` | Switch to a hand (or `laser`) and turn the pointer on |
+| `sound on`, `off`, `toggle` | Tap sound for the current pointer |
+| `volume <0-100>` | Volume of the tap sound, in percent |
+| `settings` | Open the settings |
+| `quit` | Quit Waypointer |
 
-While TinyHand runs, it keeps its current state in
-`~/Library/Application Support/TinyHand/state.json`: whether the pointer is on, the
-selected style, whether sound is on, and every style with its `id`, name and type
-(`hand`, `custom` or `laser`). The file is removed when TinyHand quits. It also
-records the app's `pid`, so a file left behind by a crash can be detected.
+Links work too: `xdg-open waypointer://style/robot`. So does D-Bus: the service
+`de.felitendo.Waypointer` has `Toggle`, `On`, `Off`, `Clear`, `Run` and `State` on `/Waypointer`.
 
-If TinyHand isn't running, opening any link launches it and then runs the command.
+While Waypointer runs, it keeps its state in `$XDG_RUNTIME_DIR/waypointer/state.json`: whether
+the pointer is on, the style, whether sound is on, and every style with its `id`, name and type
+(`hand`, `custom` or `laser`).
+
+## Building
+
+Waypointer is written in Rust and drawn with [Rune](https://github.com/anomalyco/rune), the
+toolkit behind [Hex](https://github.com/anomalyco/hex).
+
+```bash
+make test
+```
+
+```bash
+make run
+```
+
+## Credits
+
+The hands, the sounds and the whole idea come from [TinyHand](https://github.com/nilbuild/tinyhand)
+by nilbuild. Waypointer brings it to Linux.
 
 ## License
 

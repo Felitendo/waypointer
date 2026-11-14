@@ -1,0 +1,40 @@
+[package]
+name = "waypointer"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "A tiny hand on a stick that points at things on your screen"
+repository = "https://github.com/Felitendo/waypointer"
+
+[dependencies]
+rune = { git = "https://github.com/anomalyco/rune", rev = "4fdc05f6bcd662d57f7ab9210bdae2a8090f380c", features = ["native-file-dialog"] }
+rune-kit = { git = "https://github.com/anomalyco/rune", rev = "4fdc05f6bcd662d57f7ab9210bdae2a8090f380c" }
+dirs = "6"
+image = { version = "0.25", default-features = false, features = ["png", "webp"] }
+ksni = { version = "0.3", default-features = false, features = ["blocking", "async-io"] }
+rodio = { version = "0.23", default-features = false, features = ["playback", "wav"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+wayland-backend = { version = "0.3", features = ["client_system"] }
+wayland-client = "0.31"
+wayland-scanner = "0.31"
+zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
+
+# Rune patches these in its own workspace, and a dependency's [patch] never
+# reaches the workspace that depends on it. Bump the rev together with rune's.
+[patch.crates-io]
+winit = { git = "https://github.com/anomalyco/rune", rev = "4fdc05f6bcd662d57f7ab9210bdae2a8090f380c" }
+parley_engine = { git = "https://github.com/anomalyco/rune", rev = "4fdc05f6bcd662d57f7ab9210bdae2a8090f380c" }
+wgpu-hal = { git = "https://github.com/anomalyco/rune", rev = "4fdc05f6bcd662d57f7ab9210bdae2a8090f380c" }
+accesskit_windows = { git = "https://github.com/anomalyco/rune", rev = "4fdc05f6bcd662d57f7ab9210bdae2a8090f380c" }
+accesskit_macos = { git = "https://github.com/anomalyco/rune", rev = "4fdc05f6bcd662d57f7ab9210bdae2a8090f380c" }
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+opt-level = 2
+
+[profile.release]
+strip = true
