@@ -1,0 +1,42 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Architectures: amd64
+Codename: trixie
+Components: main
+Date: Sun, 15 Nov 2026 03:41:19 +0000
+Label: waypointer
+Origin: waypointer
+Suite: trixie
+MD5Sum:
+ 0188898f06663f909fb0e43f658a7a2b             1261 Packages
+ 789597b31dab6bfde4f63f5dbb7727e3              805 Packages.gz
+ 48025ab7636e915ba5b65fa7190a4253              144 Release
+SHA1:
+ 436fe8cc8a114e4c06eb547e86e383d178db5641             1261 Packages
+ ed10d6aa436af4ab3fb8d9400b071cc80d25a5f1              805 Packages.gz
+ 5839df8ac3f57a253c5b9bfa6484f4e7b2a78280              144 Release
+SHA256:
+ f6465721fc33c2937d6db6cd15fe20d05b8b978c2b51362cc6aacfacafa4bb93             1261 Packages
+ 9feeaf97a918f32d5c4f5d1a17867d85ae88447d0c3fc6329f86c90224cd6f4f              805 Packages.gz
+ 617791642b123a6674eef9921c2aae17e8a716854f6b7635e2c6fff4e3ef630f              144 Release
+SHA512:
+ 3c67825956002e599b88e86c885cd865de5e7215e9c1492b0f6d7d2ed9ab0dd6d5f5cac8c44af3349fa11ab0abe7968f980dde3db3e5872baabd2e7615f95883             1261 Packages
+ 0ca2e6b923f26747b42bb201e8ffb7f33a98cf4d95c3e6248da1604ec053b89210caa1b3758749eaa6f23fcd081483b3ca2d676f35cacdfc166cfdb12df210a5              805 Packages.gz
+ 2746ef24b10873410b410604df0c51177937dedd083ca7b110036e8df7e883aeff6b01dd2fb0e6a7e10e3b701a4262e728f3560e132f32557e826757b04678ef              144 Release
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEmt0Oxg5k0Csmcg7F6JxLIoC6lD4FAmr5Kd8ACgkQ6JxLIoC6
+lD6QRA//Urne8Yj3mOu6YOFNq3zetK8V0RBp6F5GoJLFeH6FyyeacelWFaQmnA7p
+N7lS65/HNm27qf60PAju2drWEK6n+h30KrhYtseWrzvDXa84fQ9Ab5GghNh+6O+P
+yODxnsZ3qZayOJfd9vom51A6nxAKmfIzAw3WwwMC81ECmRZRpK2YUxgO/jqgm+Uj
+DPp8HZbFONmCsU1whPy2iQH7HWqp4EvEcztcsbAxsVoeQQiHd2NXYevPM6xNkX7h
+iKnM0AvRcVxDfxRe8iRot/Y2sGFvT8xE6c8npMjQSZdefjen13NSDL5Vv71dvRRD
+prpbHjD/MEfz2+GZ3aeU0alUz2Dqsv7SLETZqhYlJ/jAAdANSK0rEhC4YqM/MHlo
+WfyPNXpej3j1BcCtnyABHn1bt/AWz2znDkdz1d8dXR4jsk3n8I1m+OsO930HiN8d
+Z4MGwW+lQ8b3N1P/pvOskHlLAu9vz1WaJ3o/+Ol2dpOR+kunipXRTzVpsaGS/iM+
+g4ZS+JsTzRAMplHPQLquYv5mD8Csq+bi2nwoFfUKbhi+DaYre2bpCbgSYXKguFXT
+5RADG8vOap56h1Xi4G/6uB/GSD/GG4ZpZWpGm86lTFQXloZFKrQp2BetHHsKkVQE
+wgl2RcbLolFGMwN7TplUR75WqtLvCpzC9tqdXzeE2uwA9A2sC3s=
+=KXDZ
+-----END PGP SIGNATURE-----

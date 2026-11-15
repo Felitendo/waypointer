@@ -1,0 +1,23 @@
+Architectures: amd64
+Codename: resolute
+Components: main
+Date: Sun, 15 Nov 2026 03:41:20 +0000
+Label: waypointer
+Origin: waypointer
+Suite: resolute
+MD5Sum:
+ bc6861bd2a9788050c2badc43f07276e             1273 Packages
+ 2fbc874262d7e58e925df0ee9d68f096              806 Packages.gz
+ 2e21c8aa87512f351b9e431c1df3be27              148 Release
+SHA1:
+ 8136308feaaff9df699f8af0e96f561b91ac8932             1273 Packages
+ 5187afa2a83f299aa5a85010a430e1900f8ae06e              806 Packages.gz
+ 229d140e2faecc411adc1f48e978d9eb3da033c2              148 Release
+SHA256:
+ 646366077df087ca9ad0cfffbc2b40260072b9281caf18fe07ae321a3eb51817             1273 Packages
+ 5a569c76556004b92f1bd07c8e56808977f7752757d9c643a5877cfac8f80cb0              806 Packages.gz
+ f9b8cff2b7a58a7b126fbf4540c279e166cd39d839007780783ec1a39c9e9c44              148 Release
+SHA512:
+ ce24443c7909df823c77a3b1c5824e026142742a0fe3f47e43574c0b68ccb2600ba4202fcf16a045ec510683c5f945db77871fefe4fb08e07b08b106c270fd76             1273 Packages
+ 79f8bb7f383c61bd2941ff9414aff302bc3295434b70f439554b5d53a831f391c9d0964d2b5a5c29c39b8a2c620251bfb3a06fbfc4c1e7d1e9f88cfe2f54b2cc              806 Packages.gz
+ b8372ab83639b51a4d3b5febe4dae9e0be55fe2525980c2ff04364244978bb7fe808955cd7a22886a8535438e1a300141ad63e75de5e87636663f8ea5bb13073              148 Release
