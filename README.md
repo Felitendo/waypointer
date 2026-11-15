@@ -28,14 +28,48 @@ nothing underneath gets clicked. Great for screen shares, recordings and present
 
 ## Install
 
-On Arch Linux and the distributions built on it, Waypointer is in the
-[AUR](https://aur.archlinux.org/packages/waypointer):
+<details>
+<summary><b>Arch</b>, CachyOS, EndeavourOS, Manjaro</summary>
 
 ```bash
 yay -S waypointer
 ```
 
-Or build it from source:
+Or `waypointer-bin`, already built, if you don't want to wait for it to compile.
+
+</details>
+
+<details>
+<summary><b>Fedora</b></summary>
+
+```bash
+sudo curl -fsSL -o /etc/yum.repos.d/waypointer.repo \
+  https://felitendo.github.io/waypointer/waypointer.repo
+sudo dnf install waypointer
+```
+
+</details>
+
+<details>
+<summary><b>Debian</b> 13, Ubuntu 26.04</summary>
+
+```bash
+codename="$(sed -n 's/^VERSION_CODENAME=//p' /etc/os-release)"
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://felitendo.github.io/waypointer/KEY.gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/waypointer.gpg
+echo "deb [signed-by=/etc/apt/keyrings/waypointer.gpg] https://felitendo.github.io/waypointer/deb/$codename ./" \
+  | sudo tee /etc/apt/sources.list.d/waypointer.list
+sudo apt update && sudo apt install waypointer
+```
+
+</details>
+
+New versions then come with your system updates. Every release also has the packages to
+download.
+
+<details>
+<summary>Build it from source</summary>
 
 ```bash
 sudo pacman -S --needed rust libxkbcommon wayland
@@ -50,6 +84,8 @@ cd waypointer && make && sudo make install
 ```
 
 Or, without root, for your user only: `make install PREFIX=~/.local`.
+
+</details>
 
 Then start **Waypointer** from the app menu. It lives in the system tray and opens at login
 from then on (switch that off in the settings).
