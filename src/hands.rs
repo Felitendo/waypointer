@@ -86,10 +86,10 @@ pub struct BuiltIn {
 const PURPLE: u32 = 0x8754F2;
 pub const RED: u32 = 0xFF291F;
 
-/// The same hands, names and ink colours as TinyHand for macOS.
+/// The same hands, names and ink colours as TinyHand for macOS, but the white glove draws white.
 pub const BUILT_IN: &[BuiltIn] = &[
     BuiltIn { id: "lavender", title: n!("Lavender toy"), ink: PURPLE },
-    BuiltIn { id: "glove", title: n!("Cursor glove"), ink: PURPLE },
+    BuiltIn { id: "glove", title: n!("Cursor glove"), ink: 0xFFFFFF },
     BuiltIn { id: "coral", title: n!("Coral vinyl"), ink: RED },
     BuiltIn { id: "plush", title: n!("Plush"), ink: 0x2F86F0 },
     BuiltIn { id: "robot", title: n!("Robot"), ink: 0x16A87A },
