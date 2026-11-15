@@ -211,7 +211,9 @@ impl Screen {
         self.hub.tapped();
         self.hint.clear();
         self.close_tray();
-        self.ripples.push(Ripple { at, born: tx.clock(), color: self.hub.ink() });
+        if self.hub.with_settings(|s| s.ripples) {
+            self.ripples.push(Ripple { at, born: tx.clock(), color: self.hub.ink() });
+        }
     }
 
     fn close_tray(&mut self) {
@@ -843,4 +845,24 @@ mod tests {
         assert_eq!(strokes(&mut rt), 1, "now a drag draws");
     }
 
+    #[test]
+    fn the_ring_where_you_click_can_be_turned_off() {
+        let (hub, mut rt) = overlay(crate::settings::Settings { hint_shown: true, ..Default::default() });
+        hub.activate();
+        sync(&mut rt, &hub);
+        let rings = |rt: &mut Runtime<Screen>| {
+            let mut n = 0;
+            rt.update(|s, _| n = s.ripples.len());
+            n
+        };
+        rt.pointer_down(300.0, 300.0);
+        rt.pointer_up(300.0, 300.0);
+        frames(&mut rt, 2);
+        assert_eq!(rings(&mut rt), 1, "a click leaves a ring");
+        hub.change(|s| s.ripples = false);
+        rt.pointer_down(400.0, 300.0);
+        rt.pointer_up(400.0, 300.0);
+        frames(&mut rt, 2);
+        assert_eq!(rings(&mut rt), 1, "with the ring off, no new one");
+    }
 }

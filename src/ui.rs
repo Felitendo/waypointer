@@ -660,6 +660,8 @@ fn drawing(p: Paint, st: &settings::Settings) -> El {
     page(p, tr("Drawing"))
         .child(card(p, "ink", Some(tr("Ink")), [
             setting(p, "ink-row", tr("Ink colour"), Some(tr(INKS[current].1)), swatches.mr(4.0)),
+            toggle_row(p, "ripples-row", tr("Ring where you click"), Some(tr("A ring spreads where you click or start a line.")), st.ripples, true,
+                |s| s.hub.change(|st| st.ripples = !st.ripples)),
             setting(p, "fade-row", tr("Drawings fade after"), Some(tr("Or keep them until you clear them.")),
                 segmented(p, "fade", &labels, fade, 300.0, true, |s, i| s.hub.change(|st| st.fade_seconds = FADES[i].0))),
         ]))

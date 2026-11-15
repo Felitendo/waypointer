@@ -196,5 +196,7 @@
  "{} is in your toolbar.": "{} jest na twoim pasku.",
  "{} is ready. Add it to the toolbar above.": "{} jest gotowa. Dodaj ją do paska powyżej.",
  "{} of {} places. Click a pointer to take it out.": "Miejsca: {} z {}. Kliknij wskaźnik, aby go usunąć.",
- "‹ Pointers": "‹ Wskaźniki"
+ "‹ Pointers": "‹ Wskaźniki",
+ "Ring where you click": "Pierścień przy kliknięciu",
+ "A ring spreads where you click or start a line.": "Tam, gdzie klikasz lub zaczynasz linię, rozchodzi się pierścień."
 }

@@ -75,7 +75,8 @@ pick the PNG. Waypointer checks it and puts it on a stick.
 </p>
 
 Every setting is in the settings window: shortcuts, which key clicks for real, the toolbar,
-the pointer size, the ink, the tap sound and its volume.
+the pointer size, the ink, the tap sound and its volume. On the **Drawing** page you pick the
+ink, how long drawings stay, and whether a ring spreads where you click.
 
 ## Desktops
 

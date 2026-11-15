@@ -56,6 +56,8 @@ pub struct Settings {
     pub interact_keeps_hand: bool,
     pub double_shift: bool,
     pub ink: String,
+    /// A ring spreads where you click or start a line.
+    pub ripples: bool,
     /// A language code, or "system".
     pub language: String,
     pub show_toolbar: bool,
@@ -82,6 +84,7 @@ impl Default for Settings {
             interact_keeps_hand: false,
             double_shift: true,
             ink: "match".into(),
+            ripples: true,
             language: "system".into(),
             show_toolbar: true,
             show_ink_button: true,

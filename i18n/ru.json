@@ -196,5 +196,7 @@
  "{} is in your toolbar.": "{} на твоей панели.",
  "{} is ready. Add it to the toolbar above.": "{} готова. Добавь её на панель выше.",
  "{} of {} places. Click a pointer to take it out.": "Мест занято: {} из {}. Нажми на указатель, чтобы убрать его.",
- "‹ Pointers": "‹ Указатели"
+ "‹ Pointers": "‹ Указатели",
+ "Ring where you click": "Кольцо при нажатии",
+ "A ring spreads where you click or start a line.": "Там, где ты нажимаешь или начинаешь линию, расходится кольцо."
 }

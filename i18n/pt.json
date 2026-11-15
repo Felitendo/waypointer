@@ -196,5 +196,7 @@
  "{} is in your toolbar.": "{} está na sua barra.",
  "{} is ready. Add it to the toolbar above.": "{} está pronta. Adicione-a à barra acima.",
  "{} of {} places. Click a pointer to take it out.": "{} de {} lugares. Clique em um ponteiro para tirá-lo.",
- "‹ Pointers": "‹ Ponteiros"
+ "‹ Pointers": "‹ Ponteiros",
+ "Ring where you click": "Anel ao clicar",
+ "A ring spreads where you click or start a line.": "Um anel se espalha onde você clica ou começa uma linha."
 }

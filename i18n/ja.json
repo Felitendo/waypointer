@@ -196,5 +196,7 @@
  "{} is in your toolbar.": "{} はツールバーにあります。",
  "{} is ready. Add it to the toolbar above.": "{} の準備ができました。上でツールバーに追加してください。",
  "{} of {} places. Click a pointer to take it out.": "{} / {} 枠を使用中。ポインターをクリックすると外せます。",
- "‹ Pointers": "‹ ポインター"
+ "‹ Pointers": "‹ ポインター",
+ "Ring where you click": "クリックの波紋",
+ "A ring spreads where you click or start a line.": "クリックした所や線を描き始めた所に波紋が広がります。"
 }

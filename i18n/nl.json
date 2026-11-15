@@ -196,5 +196,7 @@
  "{} is in your toolbar.": "{} staat in je balk.",
  "{} is ready. Add it to the toolbar above.": "{} is klaar. Voeg hem hierboven aan de balk toe.",
  "{} of {} places. Click a pointer to take it out.": "{} van {} plekken. Klik op een aanwijzer om hem eruit te halen.",
- "‹ Pointers": "‹ Aanwijzers"
+ "‹ Pointers": "‹ Aanwijzers",
+ "Ring where you click": "Ring bij klikken",
+ "A ring spreads where you click or start a line.": "Waar je klikt of een lijn begint, verschijnt een ring."
 }
