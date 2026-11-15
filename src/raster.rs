@@ -159,8 +159,10 @@ fn overlaps(a: Rect, b: Rect) -> bool {
     a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1]
 }
 
+/// Rune's colours are linear; the pictures are sRGB.
 fn skia_color(c: Color, alpha: f32) -> Option<tiny_skia::Color> {
-    tiny_skia::Color::from_rgba(c.r.clamp(0.0, 1.0), c.g.clamp(0.0, 1.0), c.b.clamp(0.0, 1.0), alpha.clamp(0.0, 1.0))
+    let enc = |v: f32| rune::color::srgb_encode(v.clamp(0.0, 1.0));
+    tiny_skia::Color::from_rgba(enc(c.r), enc(c.g), enc(c.b), alpha.clamp(0.0, 1.0))
 }
 
 /// tiny-skia keeps premultiplied pixels; Rune takes straight ones.

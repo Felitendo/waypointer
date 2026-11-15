@@ -259,13 +259,10 @@ pub fn silhouette(img: &RgbaImage, pad: u32, blur: f32) -> RgbaImage {
     out
 }
 
+/// An sRGB hex colour as Rune's colour, which is linear.
 pub fn rgb(ink: u32) -> rune::Color {
-    rune::Color {
-        r: ((ink >> 16) & 0xFF) as f32 / 255.0,
-        g: ((ink >> 8) & 0xFF) as f32 / 255.0,
-        b: (ink & 0xFF) as f32 / 255.0,
-        a: 1.0,
-    }
+    let c = |shift: u32| rune::color::srgb_decode(((ink >> shift) & 0xFF) as f32 / 255.0);
+    rune::Color { r: c(16), g: c(8), b: c(0), a: 1.0 }
 }
 
 #[cfg(test)]

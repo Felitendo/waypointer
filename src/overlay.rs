@@ -613,8 +613,8 @@ pub fn preview_spec() -> rune::AppSpec<Screen> {
 fn preview_view(s: &Screen, cx: &mut Cx<Screen>) -> El {
     el().w_full().h_full()
         .child(row().w_full().h_full().pin(Some(0.0), Some(0.0), None, None)
-            .child(el().grow(1.0).h_full().fill(Color { r: 0.93, g: 0.93, b: 0.94, a: 1.0 }))
-            .child(el().grow(1.0).h_full().fill(Color { r: 0.11, g: 0.11, b: 0.13, a: 1.0 })))
+            .child(el().grow(1.0).h_full().fill(hands::rgb(0xEDEDF0)))
+            .child(el().grow(1.0).h_full().fill(hands::rgb(0x1C1C21))))
         .child(view(s, cx).pin(Some(0.0), Some(0.0), None, None))
 }
 
