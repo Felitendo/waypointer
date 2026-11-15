@@ -35,13 +35,16 @@ impl Services for NoServices {}
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Mode {
     pub active: bool,
-    /// Latched with a double tap on Shift: clicks reach the apps, the hand stays.
+    /// Latched with a double tap on Shift or the ink button: clicks reach the apps, the hand
+    /// stays, and the toolbar still takes its own.
     pub click_through: bool,
     pub interact_held: bool,
     pub drawing: bool,
     pub ctrl: bool,
     /// Clicks go to the apps right now.
     pub pass: bool,
+    /// They pass but the toolbar still takes its own: not while Alt is held.
+    pub bar_only: bool,
     /// The real cursor shows instead of the hand.
     pub hand_hidden: bool,
     pub tracking: bool,
@@ -148,7 +151,8 @@ impl Hub {
         if before.volume != after.volume {
             self.sound.set_volume(after.volume);
         }
-        if !after.double_shift && self.mode().click_through {
+        // Turned off while latched: let go, as nothing else might.
+        if before.double_shift && !after.double_shift && self.mode().click_through {
             self.set_click_through(false);
         }
         self.update_mode();
@@ -371,18 +375,22 @@ impl Hub {
             let before = *m;
             let interact = m.interact_held && !m.drawing && s.interact_key != InteractKey::Off;
             m.pass = m.active && (m.click_through || interact);
+            m.bar_only = m.pass && !interact;
             let keep = m.pass && can_track && (m.click_through || s.interact_keeps_hand);
             m.hand_hidden = m.pass && !keep;
             m.tracking = keep;
             (before, *m)
         };
-        if before.pass != after.pass && after.active {
-            let input = if after.pass { OverlayInput::None } else { OverlayInput::Regions };
+        // All clicks pass (Alt held), or the overlay takes those on its `hit` parts: everything,
+        // or while clicks go through just the toolbar.
+        let all = |m: &Mode| m.pass && !m.bar_only;
+        if all(&before) != all(&after) && after.active {
+            let input = if all(&after) { OverlayInput::None } else { OverlayInput::Regions };
             for o in self.overlays.lock().unwrap().iter() {
                 o.handle.set_input(input);
             }
-            // Back from passing clicks on: show the hand where the cursor is now.
-            if !after.pass {
+            // Back from passing every click on: show the hand where the cursor is now.
+            if !all(&after) {
                 self.services().request_areas();
             }
         }
@@ -391,13 +399,8 @@ impl Hub {
         }
         self.services().set_esc(after.active && !after.click_through);
         if before != after {
-            let hidden = after.hand_hidden;
-            let tracking = after.tracking;
             for o in self.overlays.lock().unwrap().iter() {
-                o.handle.update(move |s: &mut Screen, _| {
-                    s.hand_hidden = hidden;
-                    s.tracking = tracking;
-                });
+                o.handle.update(move |s: &mut Screen, _| s.mode(&after));
             }
             if before.click_through != after.click_through {
                 self.services().refresh_tray();
@@ -405,7 +408,9 @@ impl Hub {
         }
     }
 
-    fn set_click_through(&self, on: bool) {
+    /// Clicks go through to the apps, or the hand taps and draws again: a double tap on Shift
+    /// or the toolbar's ink button.
+    pub fn set_click_through(&self, on: bool) {
         {
             let mut m = self.mode.lock().unwrap();
             if !m.active || m.click_through == on {
@@ -414,11 +419,15 @@ impl Hub {
             m.click_through = on;
         }
         let keep = self.services().can_track();
-        let hint: Vec<(String, String)> = if on {
-            vec![(tr("Clicks go through").into(), if keep { tr("the hand stays").into() } else { tr("to the apps").into() }), (tr("Double-tap ⇧").into(), tr("to tap again").into())]
+        let shift = self.can_hold.load(Ordering::Relaxed) && self.with_settings(|s| s.double_shift);
+        let mut hint: Vec<(String, String)> = if on {
+            vec![(tr("Clicks go through").into(), if keep { tr("the hand stays").into() } else { tr("to the apps").into() })]
         } else {
-            vec![(tr("Taps").into(), tr("clicks don't reach apps").into()), (tr("Double-tap ⇧").into(), tr("to click through").into())]
+            vec![(tr("Taps").into(), tr("clicks don't reach apps").into())]
         };
+        if shift {
+            hint.push((tr("Double-tap ⇧").into(), if on { tr("to tap again") } else { tr("to click through") }.into()));
+        }
         let now = self.now();
         for o in self.overlays.lock().unwrap().iter() {
             let hint = hint.clone();
@@ -567,4 +576,39 @@ pub enum Modifier {
     Ctrl,
     Shift,
     Meta,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tap_shift(hub: &Hub) {
+        hub.modifier(Modifier::Shift, true);
+        hub.modifier(Modifier::Shift, false);
+    }
+
+    #[test]
+    fn double_shift_and_the_ink_button_are_one_switch() {
+        crate::settings::test_config();
+        let hub = Hub::new(Settings { hint_shown: true, ..Settings::default() });
+        hub.activate();
+        assert!(!hub.mode().pass, "the hand taps and draws at first");
+
+        hub.set_click_through(true);
+        let m = hub.mode();
+        assert!(m.click_through && m.pass && m.bar_only, "clicks go to the apps, the toolbar takes its own");
+        tap_shift(&hub);
+        tap_shift(&hub);
+        assert!(!hub.mode().pass, "a double tap on Shift turns it off again");
+        tap_shift(&hub);
+        tap_shift(&hub);
+        assert!(hub.mode().click_through && hub.mode().bar_only, "and on, with the toolbar still working");
+
+        hub.modifier(Modifier::Alt, true);
+        let m = hub.mode();
+        assert!(m.pass && !m.bar_only, "holding Alt lets every click through");
+        hub.modifier(Modifier::Alt, false);
+        hub.set_click_through(false);
+        assert!(!hub.mode().pass);
+    }
 }

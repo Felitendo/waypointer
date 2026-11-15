@@ -62,8 +62,10 @@ from then on (switch that off in the settings).
 | **Esc** | Clear everything and turn the pointer off |
 
 While the pointer is on, a small toolbar at the bottom of the screen lets you pick one of 36
-hands or a laser dot, change the ink colour, set the volume of the tap sound, or exit. The panels stay
-usable with the normal cursor.
+hands or a laser dot, or exit. The ink button does what a double tap on Shift does: your clicks
+reach the windows and the hand stays, until you click it or double-tap again. Click the speaker
+to mute the tap sound. Rest the pointer on either to pick the ink colour or set the volume. The
+panels stay usable with the normal cursor.
 
 You can make your own hand too: describe it, let ChatGPT or another image tool draw it, and
 pick the PNG. Waypointer checks it and puts it on a stick.

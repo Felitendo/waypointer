@@ -67,6 +67,17 @@ pub fn speaker(on: bool, size: f32, color: Color) -> El {
     icon(if on { &SPEAKER_ON_ICON } else { &SPEAKER_OFF }, size).color(color)
 }
 
+static SLASH: Icon = Icon {
+    name: "wp-slash",
+    view: 24.0,
+    body: r#"<path d="M5 19L19 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>"#,
+};
+
+/// A line across, for something turned off.
+pub fn slash(size: f32, color: Color) -> El {
+    icon(&SLASH, size).color(color)
+}
+
 pub fn close(size: f32, color: Color) -> El {
     icon(&CLOSE, size).color(color)
 }

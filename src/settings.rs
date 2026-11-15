@@ -175,6 +175,18 @@ pub fn set_launch_at_login(on: bool) {
     );
 }
 
+/// Points the tests that save settings at a file of their own, never the user's.
+#[cfg(test)]
+pub fn test_config() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        let dir = std::env::temp_dir().join(format!("waypointer-test-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&dir);
+        // SAFETY: set once, before any test reads it; nothing else sets WP_CONFIG.
+        unsafe { std::env::set_var("WP_CONFIG", dir.join("settings.json")) };
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
