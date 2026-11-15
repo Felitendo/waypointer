@@ -26,8 +26,10 @@ name them by hand, with a Vulkan driver.
 The `.deb` is built twice, in Debian 13 and in Ubuntu 26.04, with a suffix on
 the version (`~deb13`, `~ubuntu26.04`), and each gets an APT repository of its
 own: `deb/trixie` and `deb/resolute`. Debian's own Rust is too old for edition
-2024, so the workflow installs Rust with rustup there. The RPM is built on the
-current Fedora with Fedora's Rust. The Arch tarball
+2024, so the workflow installs Rust with rustup there. The RPM is built with
+Fedora's Rust on the oldest Fedora that still gets updates (44), so it runs on
+the newer one too; the dry run installs it on both. Move it on when that
+Fedora reaches its end of life. The Arch tarball
 (`waypointer-<version>-arch-x86_64.tar.zst`) is built on Arch and holds a
 folder with the `make install` tree.
 

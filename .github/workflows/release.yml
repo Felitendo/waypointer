@@ -77,7 +77,9 @@ jobs:
   rpm:
     name: RPM package
     runs-on: ubuntu-latest
-    container: fedora:latest
+    # The oldest Fedora that still gets updates: a binary built against its
+    # glibc runs on the newer one too, the other way round it does not.
+    container: fedora:44
     steps:
       - name: Install the build tools
         run: |
@@ -289,11 +291,14 @@ jobs:
           waypointer --version
 
   verify-dnf:
-    name: Install from the RPM repository
+    name: Install from the RPM repository (${{ matrix.image }})
     needs: publish
     if: inputs.dry_run
     runs-on: ubuntu-latest
-    container: fedora:latest
+    strategy:
+      matrix:
+        image: ["fedora:44", "fedora:latest"]
+    container: ${{ matrix.image }}
     steps:
       - uses: actions/download-artifact@v8
         with:
