@@ -19,6 +19,8 @@ pub const TILE: u32 = 256;
 /// widest first.
 const SHADOW_OFFSET: Point = [1.0, 1.6];
 const SHADOW: [(f32, f32); 3] = [(3.2, 0.045), (1.6, 0.06), (0.4, 0.08)];
+/// A faint glow in the line's own colour: extra width and alpha per pass, widest first.
+const GLOW: [(f32, f32); 3] = [(12.0, 0.03), (7.0, 0.05), (3.5, 0.08)];
 
 /// `[x0, y0, x1, y1]` in points.
 type Rect = [f32; 4];
@@ -73,9 +75,9 @@ impl StrokeTiles {
     }
 }
 
-/// How far a line's paint reaches past its middle, shadow included.
+/// How far a line's paint reaches past its middle, shadow and glow included.
 fn reach(width: f32) -> f32 {
-    width * 0.5 + SHADOW[0].0 * 0.5 + SHADOW_OFFSET[1] + 2.0
+    width * 0.5 + (SHADOW[0].0 * 0.5 + SHADOW_OFFSET[1]).max(GLOW[0].0 * 0.5) + 2.0
 }
 
 /// One tile of a stroke, as straight-alpha RGBA, or `None` when nothing of it shows there.
@@ -122,6 +124,11 @@ fn draw_tile(stroke: &Stroke, curve: &[Cubic], head: &[[Point; 2]], scale: f32, 
         paint.set_color(tiny_skia::Color::from_rgba(0.0, 0.0, 0.0, alpha)?);
         pen.width = stroke.width + extra;
         pixmap.stroke_path(&path, &paint, &pen, shadow_at, None);
+    }
+    for (extra, alpha) in GLOW {
+        paint.set_color(skia_color(stroke.color, alpha)?);
+        pen.width = stroke.width + extra;
+        pixmap.stroke_path(&path, &paint, &pen, at, None);
     }
     paint.set_color(skia_color(stroke.color, 1.0)?);
     pen.width = stroke.width;
