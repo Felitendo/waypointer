@@ -195,7 +195,7 @@
  "{} is already used by Waypointer.": "{} 已被 Waypointer 使用。",
  "{} is in your toolbar.": "{} 已在你的工具栏中。",
  "{} is ready. Add it to the toolbar above.": "{} 已就绪。请在上方把它加入工具栏。",
- "{} of {} places. Click a pointer to take it out.": "已用 {}/{} 个位置。点击指针可将其移出。",
+ "{} of {} places. Drag to reorder, drag out to take one out.": "已用 {}/{} 个位置。拖动可调整顺序，拖出工具栏可移除。",
  "‹ Pointers": "‹ 指针",
  "Ring where you click": "点击光环",
  "A ring spreads where you click or start a line.": "在你点击或开始画线的地方会扩散一圈光环。"

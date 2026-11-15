@@ -195,7 +195,7 @@
  "{} is already used by Waypointer.": "{} zaten Waypointer tarafından kullanılıyor.",
  "{} is in your toolbar.": "{} çubuğunda.",
  "{} is ready. Add it to the toolbar above.": "{} hazır. Yukarıdan çubuğa ekle.",
- "{} of {} places. Click a pointer to take it out.": "{} / {} yer dolu. Çıkarmak için bir işaretçiye tıkla.",
+ "{} of {} places. Drag to reorder, drag out to take one out.": "{} / {} yer dolu. Sıralamak için sürükle, çıkarmak için çubuğun dışına sürükle.",
  "‹ Pointers": "‹ İşaretçiler",
  "Ring where you click": "Tıklayınca halka",
  "A ring spreads where you click or start a line.": "Tıkladığın ya da çizgiye başladığın yerde bir halka yayılır."

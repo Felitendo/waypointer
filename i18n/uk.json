@@ -195,7 +195,7 @@
  "{} is already used by Waypointer.": "{} уже використовує Waypointer.",
  "{} is in your toolbar.": "{} на твоїй панелі.",
  "{} is ready. Add it to the toolbar above.": "{} готова. Додай її на панель вище.",
- "{} of {} places. Click a pointer to take it out.": "Місць зайнято: {} з {}. Натисни на вказівник, щоб прибрати його.",
+ "{} of {} places. Drag to reorder, drag out to take one out.": "Місць зайнято: {} з {}. Перетягни, щоб змінити порядок, або за панель, щоб прибрати.",
  "‹ Pointers": "‹ Вказівники",
  "Ring where you click": "Кільце при натисканні",
  "A ring spreads where you click or start a line.": "Там, де ти натискаєш або починаєш лінію, розходиться кільце."

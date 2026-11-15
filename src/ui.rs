@@ -53,6 +53,14 @@ pub struct Ui {
     shortcut_error: Option<String>,
     confirm_reset: bool,
     pin_message: Option<String>,
+    /// A pointer being dragged into, within or out of the toolbar row.
+    pin_drag: Option<PinDrag>,
+    /// Where each pointer in the toolbar row sits, from layout, by place.
+    pin_slots: Vec<[f32; 4]>,
+    /// Where the toolbar row is, from layout.
+    pin_area: Option<[f32; 4]>,
+    /// The last press on a pointer was a drag, so it takes nothing out.
+    pin_dragged: bool,
     idea: TextEdit,
     hand_name: TextEdit,
     draft: Option<Draft>,
@@ -70,6 +78,10 @@ impl Ui {
             shortcut_error: None,
             confirm_reset: false,
             pin_message: None,
+            pin_drag: None,
+            pin_slots: Vec::new(),
+            pin_area: None,
+            pin_dragged: false,
             idea: TextEdit::new(""),
             hand_name: TextEdit::new(""),
             draft: None,
@@ -437,6 +449,131 @@ fn thumb(s: &Ui, id: &str, size: f32) -> El {
     }
 }
 
+/// Points the pointer travels before a press on a pointer becomes a drag.
+const PIN_SLOP: f32 = 4.0;
+/// How far past the toolbar row a pointer still drops into it.
+const PIN_REACH: f32 = 16.0;
+
+/// A pointer being dragged: within the toolbar row to a new place, out of it, or from all
+/// pointers into it.
+#[derive(Clone, Debug)]
+struct PinDrag {
+    id: String,
+    /// Its place in the toolbar row, if it has one.
+    from: Option<usize>,
+    /// It was picked up in the row: dropped off it, it goes out of the toolbar.
+    out: bool,
+    /// Where it lands in the row if dropped now; `None` off the row.
+    to: Option<usize>,
+    /// How far the pointer went since the press.
+    d: [f32; 2],
+    /// Past the slop: a drag, not a click.
+    moving: bool,
+}
+
+impl PinDrag {
+    /// Where the pointer at place `i` in the row sits while this drag goes on: the others make
+    /// room where it would land, and close up where it left.
+    fn place(&self, i: usize) -> usize {
+        match (self.from, self.to) {
+            (Some(from), Some(to)) if i == from => to,
+            (Some(from), Some(to)) if from < i && i <= to => i - 1,
+            (Some(from), Some(to)) if to <= i && i < from => i + 1,
+            (Some(from), None) if self.out && i > from => i - 1,
+            (None, Some(to)) if i >= to => i + 1,
+            _ => i,
+        }
+    }
+}
+
+/// Where place `k` of the toolbar row is, one past the last too.
+fn slot(slots: &[[f32; 4]], k: usize) -> Option<[f32; 2]> {
+    if let Some(r) = slots.get(k) {
+        return Some([r[0], r[1]]);
+    }
+    let n = slots.len();
+    let last = slots.get(n.checked_sub(1)?)?;
+    let step = if n >= 2 { [last[0] - slots[n - 2][0], last[1] - slots[n - 2][1]] } else { [last[2] + 6.0, 0.0] };
+    let more = (k + 1 - n) as f32;
+    Some([last[0] + step[0] * more, last[1] + step[1] * more])
+}
+
+fn over_row(area: Option<[f32; 4]>, at: [f32; 2]) -> bool {
+    area.is_some_and(|r| {
+        at[0] >= r[0] - PIN_REACH && at[0] <= r[0] + r[2] + PIN_REACH && at[1] >= r[1] - PIN_REACH && at[1] <= r[1] + r[3] + PIN_REACH
+    })
+}
+
+/// The place in the row a pointer dragged to `at` lands in, or `None` off the row (or when a
+/// new one finds the toolbar full).
+fn landing(slots: &[[f32; 4]], area: Option<[f32; 4]>, at: [f32; 2], from: Option<usize>, full: bool) -> Option<usize> {
+    if !over_row(area, at) {
+        return None;
+    }
+    let centre = |r: &[f32; 4]| [r[0] + r[2] / 2.0, r[1] + r[3] / 2.0];
+    let distance = |r: &[f32; 4]| {
+        let c = centre(r);
+        (c[0] - at[0]).hypot(c[1] - at[1])
+    };
+    let near = (0..slots.len()).min_by(|a, b| distance(&slots[*a]).total_cmp(&distance(&slots[*b])));
+    match from {
+        Some(from) => Some(near.unwrap_or(from)),
+        None if full => None,
+        // A new one goes before or after the nearest, whichever side the pointer is on.
+        None => Some(near.map_or(0, |j| if at[0] > centre(&slots[j])[0] { j + 1 } else { j })),
+    }
+}
+
+/// A press, drag or drop on a pointer: `from` is its place when it was picked up in the row.
+/// The others make room, and the drop puts it there, or takes it out.
+fn drag_pin(s: &mut Ui, id: &str, from: Option<usize>, d: &Drag, tx: &mut Tx) {
+    match d.phase {
+        Phase::Down => {
+            s.pin_dragged = false;
+            let pinned = s.hub.pinned();
+            s.pin_slots.truncate(pinned.len());
+            let place = from.or_else(|| pinned.iter().position(|p| p == id));
+            s.pin_drag = Some(PinDrag { id: id.to_string(), from: place, out: from.is_some(), to: place, d: [0.0, 0.0], moving: false });
+        }
+        Phase::Move => {
+            let full = s.hub.pinned().len() >= hands::MAX_PINNED;
+            let (slots, area) = (s.pin_slots.clone(), s.pin_area);
+            let Some(g) = &mut s.pin_drag else { return };
+            g.d = [d.dx, d.dy];
+            if !g.moving && d.dx.hypot(d.dy) < PIN_SLOP {
+                return;
+            }
+            g.moving = true;
+            g.to = landing(&slots, area, d.window_point(), g.from, full);
+            tx.animated();
+        }
+        Phase::Up => {
+            let Some(g) = s.pin_drag.take() else { return };
+            s.pin_dragged = g.moving;
+            if g.moving && !d.cancelled() {
+                drop_pin(s, &g, over_row(s.pin_area, d.window_point()));
+            }
+        }
+    }
+}
+
+fn drop_pin(s: &mut Ui, g: &PinDrag, over: bool) {
+    let mut pinned = s.hub.pinned();
+    match (g.from, g.to) {
+        (Some(from), Some(to)) if from != to && from < pinned.len() && to < pinned.len() => {
+            let id = pinned.remove(from);
+            pinned.insert(to, id);
+        }
+        // Off the row, or onto a full toolbar: as a click used to, with its message.
+        (Some(_), None) if g.out => return pin(s, &g.id),
+        (None, None) if over => return pin(s, &g.id),
+        (None, Some(to)) => pinned.insert(to.min(pinned.len()), g.id.clone()),
+        _ => return,
+    }
+    s.pin_message = None;
+    s.hub.change(|st| st.pinned = pinned);
+}
+
 fn pin(s: &mut Ui, id: &str) {
     let mut pinned = s.hub.pinned();
     if let Some(i) = pinned.iter().position(|p| p == id) {
@@ -458,27 +595,52 @@ fn pin(s: &mut Ui, id: &str) {
 
 fn pointers(p: Paint, s: &Ui, st: &settings::Settings) -> El {
     let pinned = s.hub.pinned();
-    let mut bar = row().key("pinned").gap(6.0).padding(space::S3).flex_wrap();
-    for id in &pinned {
-        let take = id.clone();
+    let drag = s.pin_drag.as_ref().filter(|g| g.moving);
+    let mut bar = row().key("pinned").gap(6.0).padding(space::S3).flex_wrap().on_layout(|s: &mut Ui, r| s.pin_area = Some(r));
+    for (i, id) in pinned.iter().enumerate() {
         let current = *id == st.pointer;
-        bar = bar.child(
-            col().key(format!("pinned-{id}")).w(72.0).gap(4.0).center().padding(6.0).radius(radius::LG)
-                .fill(if current { p.accent.alpha(0.14) } else { Color::TRANSPARENT })
-                .hover(p.t.hover).press_scale(0.95).help(trf("Take {} out of the toolbar", &[&s.hub.title(id)]))
-                .on_press(move |s: &mut Ui| pin(s, &take))
-                .child(thumb(s, id, 48.0))
-                .child(text(s.hub.title(id)).font(rune::tok::TextStyle::new(11.0, 500.0)).color(p.t.text_secondary).truncate()),
-        );
+        let lifted = drag.is_some_and(|g| g.out && g.from == Some(i));
+        let (pick, take) = (id.clone(), id.clone());
+        let mut item = col().key(format!("pinned-{id}")).w(72.0).gap(4.0).center().padding(6.0).radius(radius::LG)
+            .fill(if lifted { p.t.card } else if current { p.accent.alpha(0.14) } else { Color::TRANSPARENT })
+            .hover(p.t.hover).press_scale(0.95).help(trf("Take {} out of the toolbar", &[&s.hub.title(id)]))
+            .on_layout(move |s: &mut Ui, r| {
+                if s.pin_slots.len() <= i {
+                    s.pin_slots.resize(i + 1, [0.0; 4]);
+                }
+                s.pin_slots[i] = r;
+            })
+            .on_drag(move |s: &mut Ui, d: &mut Drag, tx| drag_pin(s, &pick.clone(), Some(i), d, tx))
+            .on_press(move |s: &mut Ui| {
+                if !std::mem::take(&mut s.pin_dragged) {
+                    pin(s, &take);
+                }
+            })
+            .child(thumb(s, id, 48.0))
+            .child(text(s.hub.title(id)).font(rune::tok::TextStyle::new(11.0, 500.0)).color(p.t.text_secondary).truncate());
+        if let Some(g) = drag {
+            if lifted {
+                // It follows the pointer exactly, above the others; off the row it fades, as
+                // dropping it there takes it out.
+                item = item.offset(g.d[0], g.d[1]).offset_motion(rune::Anim::INSTANT).raise().cursor(rune::Cursor::Grabbing)
+                    .shadow(4.0, 14.0, p.t.shadow).opacity(if g.to.is_some() { 1.0 } else { 0.45 });
+            } else if let (Some(home), Some(there)) = (slot(&s.pin_slots, i), slot(&s.pin_slots, g.place(i))) {
+                item = item.offset(there[0] - home[0], there[1] - home[1]);
+            }
+        }
+        bar = bar.child(item);
     }
+    // A pointer from below over the row lights it up.
+    let adding = drag.is_some_and(|g| !g.out && g.to.is_some());
     let mut g = page(p, tr("Pointers"));
     let mut toolbar = col().key("toolbar-section").gap(space::S2)
         .child(text(tr("In your toolbar")).font(type_::SECTION).color(p.t.text_secondary).ml(space::S3))
-        .child(col().fill(p.t.card).radius(radius::LG).border(p.hair, p.t.card_border).shadow(1.0, 2.0, p.t.shadow)
+        .child(col().fill(if adding { p.t.card.mix(p.accent, 0.12) } else { p.t.card }).radius(radius::LG)
+            .border(p.hair, if adding { p.accent } else { p.t.card_border }).shadow(1.0, 2.0, p.t.shadow)
             .child(bar)
             .child(el().h(p.hair).ml(space::S3).mr(space::S3).fill(p.t.separator))
             .child(row().px(space::S3).py(10.0).gap(16.0).center_y()
-                .child(text(trf("{} of {} places. Click a pointer to take it out.", &[&pinned.len(), &hands::MAX_PINNED])).font(type_::LABEL).color(p.t.text_secondary).grow(1.0))
+                .child(text(trf("{} of {} places. Drag to reorder, drag out to take one out.", &[&pinned.len(), &hands::MAX_PINNED])).font(type_::LABEL).color(p.t.text_secondary).grow(1.0))
                 .child(button(p, "reset-toolbar", tr("Reset"), false).on_press(|s: &mut Ui| {
                     s.pin_message = None;
                     s.hub.change(|st| st.pinned = hands::DEFAULT_PINNED.iter().map(|x| x.to_string()).collect());
@@ -492,11 +654,21 @@ fn pointers(p: Paint, s: &Ui, st: &settings::Settings) -> El {
     let mut grid = row().key("all").gap(4.0).padding(space::S3).flex_wrap();
     for id in s.hub.styles() {
         let is_pinned = pinned.contains(&id);
-        let take = id.clone();
+        let lifted = drag.is_some_and(|g| !g.out && g.id == id);
+        let (pick, take) = (id.clone(), id.clone());
         let mut tile = el().key(format!("tile-{id}")).size(64.0, 64.0).center().radius(radius::LG)
             .hover(p.t.hover).press_scale(0.92).help(s.hub.title(&id))
-            .on_press(move |s: &mut Ui| pin(s, &take))
+            .on_drag(move |s: &mut Ui, d: &mut Drag, tx| drag_pin(s, &pick, None, d, tx))
+            .on_press(move |s: &mut Ui| {
+                if !std::mem::take(&mut s.pin_dragged) {
+                    pin(s, &take);
+                }
+            })
             .child(thumb(s, &id, 50.0));
+        if lifted && let Some(g) = drag {
+            tile = tile.offset(g.d[0], g.d[1]).offset_motion(rune::Anim::INSTANT).raise().cursor(rune::Cursor::Grabbing)
+                .fill(p.t.card).shadow(4.0, 14.0, p.t.shadow);
+        }
         if is_pinned {
             tile = tile.child(el().size(18.0, 18.0).radius(9.0).center().fill(p.accent).absolute(44.0, 2.0)
                 .shadow(1.0, 3.0, Color::BLACK.alpha(0.3))
@@ -862,4 +1034,86 @@ fn make_hand(p: Paint, s: &Ui) -> El {
                         .font(type_::LABEL).color(p.t.text_secondary).wrap()))));
     }
     page(p, tr("Make your own hand")).child(back).child(steps)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rune::{Env, Runtime};
+
+    fn frames(rt: &mut Runtime<Ui>, n: usize) {
+        for _ in 0..n {
+            rt.frame(1.0 / 60.0);
+        }
+    }
+
+    fn pointers_page() -> (Arc<Hub>, Runtime<Ui>) {
+        crate::settings::test_config();
+        let hub = Hub::new(settings::Settings::default());
+        let mut ui = Ui::new(hub.clone());
+        ui.page = Page::Pointers;
+        let mut rt = Runtime::new(ui, view, (860.0, 600.0), Env { system_dark: true, scale: 1.0 });
+        frames(&mut rt, 60);
+        (hub, rt)
+    }
+
+    #[test]
+    fn a_pointer_in_the_toolbar_row_drags_to_a_new_place() {
+        let (hub, mut rt) = pointers_page();
+        let before = hub.pinned();
+        let (x0, y) = rt.find(&format!("pinned-{}", before[0])).expect("the row shows");
+        let (x2, _) = rt.find(&format!("pinned-{}", before[2])).unwrap();
+        rt.pointer_down(x0, y);
+        for k in 1..=10 {
+            rt.pointer_move(x0 + (x2 - x0) * k as f32 / 10.0, y);
+            rt.frame(1.0 / 60.0);
+        }
+        frames(&mut rt, 30);
+        let (mid, _) = rt.find(&format!("pinned-{}", before[1])).unwrap();
+        assert!(mid < x0 + 10.0, "the second one stepped aside to the first place: {mid}");
+        rt.pointer_up(x2, y);
+        frames(&mut rt, 30);
+        let mut want = before.clone();
+        let first = want.remove(0);
+        want.insert(2, first);
+        assert_eq!(hub.pinned(), want, "the drop put it in the third place, and took nothing out");
+
+        click(&mut rt, &format!("pinned-{}", want[1]));
+        assert_eq!(hub.pinned().len(), before.len() - 1, "a click still takes one out");
+    }
+
+    fn click(rt: &mut Runtime<Ui>, key: &str) {
+        let (x, y) = rt.find(key).unwrap_or_else(|| panic!("{key} shows"));
+        rt.pointer_down(x, y);
+        rt.pointer_up(x, y);
+        frames(rt, 10);
+    }
+
+    fn drag(rt: &mut Runtime<Ui>, from: (f32, f32), to: (f32, f32)) {
+        rt.pointer_down(from.0, from.1);
+        for k in 1..=12 {
+            let t = k as f32 / 12.0;
+            rt.pointer_move(from.0 + (to.0 - from.0) * t, from.1 + (to.1 - from.1) * t);
+            rt.frame(1.0 / 60.0);
+        }
+        rt.pointer_up(to.0, to.1);
+        frames(rt, 30);
+    }
+
+    #[test]
+    fn pointers_drag_into_the_toolbar_and_out_of_it() {
+        let (hub, mut rt) = pointers_page();
+        let before = hub.pinned();
+        assert!(!before.contains(&"pink".to_string()));
+        let tile = rt.find("tile-pink").expect("all pointers show");
+        let (x1, y1) = rt.find(&format!("pinned-{}", before[1])).unwrap();
+        drag(&mut rt, tile, (x1 - 10.0, y1));
+        let after = hub.pinned();
+        assert_eq!(after.len(), before.len() + 1);
+        assert_eq!(after[1], "pink", "it went in before the one it was dropped on: {after:?}");
+
+        let (px, py) = rt.find("pinned-pink").unwrap();
+        drag(&mut rt, (px, py), (px, py + 260.0));
+        assert_eq!(hub.pinned(), before, "dragged out of the row, it left the toolbar");
+    }
 }

@@ -195,7 +195,7 @@
  "{} is already used by Waypointer.": "{} est déjà utilisé par Waypointer.",
  "{} is in your toolbar.": "{} est dans ta barre.",
  "{} is ready. Add it to the toolbar above.": "{} est prête. Ajoute-la à la barre plus haut.",
- "{} of {} places. Click a pointer to take it out.": "{} places sur {}. Clique sur un pointeur pour le retirer.",
+ "{} of {} places. Drag to reorder, drag out to take one out.": "{} places sur {}. Glisse pour réordonner, ou hors de la barre pour en retirer un.",
  "‹ Pointers": "‹ Pointeurs",
  "Ring where you click": "Anneau au clic",
  "A ring spreads where you click or start a line.": "Un anneau s’étend là où tu cliques ou commences une ligne."
