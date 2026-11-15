@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.1
+
+_2026-11-15_
+
+A small release with packages. Waypointer now installs on Debian 13, Ubuntu 26.04 and Fedora,
+from repositories that bring every new version with your system updates, and on Arch as
+`waypointer-bin` if you don't want to compile it. See **Install** in the README.
+
 ## v0.1.0
 
 _2026-11-15_
