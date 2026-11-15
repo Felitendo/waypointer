@@ -3969,6 +3969,7 @@ dependencies = [
  "rune-kit",
  "serde",
  "serde_json",
+ "tiny-skia",
  "wayland-backend",
  "wayland-client",
  "wayland-scanner",

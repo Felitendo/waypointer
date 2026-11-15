@@ -13,6 +13,7 @@ mod ink;
 mod keystate;
 mod overlay;
 mod platform;
+mod raster;
 mod settings;
 mod sound;
 mod tray;
@@ -113,6 +114,13 @@ fn main() {
 
     let h = hub.clone();
     let first_run = !settings.welcome_shown && !autostart && !headless;
+    // The drawing's scenes show an overlay in a window instead.
+    if rune_args.iter().position(|a| a == "--scene").and_then(|i| rune_args.get(i + 1)).is_some_and(|s| overlay::is_preview(s)) {
+        rune::run_windows_with(RunOptions { accessory: true }, move |_| {
+            vec![WindowSpec::from_app("preview", App::new(overlay::preview_spec()).args(rune_args.clone()).font_smoothing(font_smoothing()))]
+        });
+        return;
+    }
     rune::run_windows_with(RunOptions { accessory: true }, move |displays| {
         let hub = h.clone();
         let ui_hub = hub.clone();

@@ -3,17 +3,19 @@
 //! everything, full screen windows too. Only the area without panels takes the pointer, so the
 //! panels stay usable with the normal cursor, like the menu bar on the Mac.
 
-use std::collections::VecDeque;
+use std::cell::RefCell;
+use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::Duration;
 
 use rune::tok::motion;
-use rune::{Color, Cursor, Cx, Drag, El, LineCap, Phase, Shape, Transition, Tx, canvas, col, el, row, text};
+use rune::{Color, Cursor, Cx, Drag, El, Phase, Shape, Transition, Tx, canvas, col, el, row, text};
 
 use crate::arm::{self, Motion};
 use crate::hands;
 use crate::hub::Hub;
 use crate::ink::{self, Stroke};
+use crate::raster::{self, StrokeTiles};
 
 const BAR_GAP: f32 = 14.0;
 /// How long the laser's trail glows behind it.
@@ -55,6 +57,8 @@ pub struct Screen {
     trail: VecDeque<([f32; 2], f64)>,
     now: f64,
     last_poll: Option<f64>,
+    /// The drawing's pictures, by stroke. Drawn in `view`, which knows the scale.
+    pictures: RefCell<HashMap<u64, StrokeTiles>>,
 }
 
 impl Screen {
@@ -83,6 +87,7 @@ impl Screen {
             trail: VecDeque::new(),
             now: 0.0,
             last_poll: None,
+            pictures: RefCell::new(HashMap::new()),
         }
     }
 
@@ -127,7 +132,7 @@ impl Screen {
         if let Some(stroke) = self.strokes.last_mut()
             && stroke.finished.is_none()
         {
-            stroke.arrow = on;
+            stroke.set_arrow(on);
         }
     }
 
@@ -224,7 +229,7 @@ impl Screen {
                 }
                 let arrow = self.arrow;
                 if let Some(stroke) = self.strokes.last_mut() {
-                    stroke.arrow = arrow;
+                    stroke.set_arrow(arrow);
                     stroke.add(at);
                 }
             }
@@ -303,9 +308,7 @@ pub fn view(s: &Screen, cx: &mut Cx<Screen>) -> El {
 
     let mut root = el().key("root").w_full().h_full().on_layout(|s: &mut Screen, r| s.size = [r[2], r[3]]);
     // The drawing, under everything else.
-    if !s.strokes.is_empty() {
-        root = root.child(canvas(ink_shape(s, settings.fade_seconds)).key("ink").w_full().h_full().pin(Some(0.0), Some(0.0), None, None));
-    }
+    root = drawing(root, s, settings.fade_seconds, scale);
 
     // Where the pointer is caught: everything but the panels.
     root = root.child(
@@ -365,32 +368,29 @@ fn rune_motion_none() -> rune::Spring {
     rune::Spring::NONE
 }
 
-fn ink_shape(s: &Screen, fade: f64) -> Shape {
-    let mut shape = Shape::new();
+/// The drawing as tile pictures, drawn again where it changed.
+fn drawing(root: El, s: &Screen, fade: f64, scale: f32) -> El {
+    let mut pictures = s.pictures.borrow_mut();
+    pictures.retain(|id, _| s.strokes.iter().any(|st| st.id == *id));
+    let side = raster::TILE as f32 / scale;
+    let none = rune_motion_none();
+    let mut root = root;
     for stroke in &s.strokes {
+        let tiles = pictures.entry(stroke.id).or_default();
+        tiles.update(stroke, scale);
         let alpha = stroke.opacity(s.now, fade);
         if alpha <= 0.0 {
             continue;
         }
-        let shadow = Color { r: 0.0, g: 0.0, b: 0.0, a: 0.18 * alpha };
-        let lines = stroke.lines();
-        for line in &lines {
-            let moved: Vec<[f32; 2]> = line.iter().map(|p| [p[0] + 1.0, p[1] + 1.5]).collect();
-            shape = draw_line(shape, moved, stroke.width, shadow);
-        }
-        for line in lines {
-            shape = draw_line(shape, line, stroke.width, stroke.color.alpha(alpha));
+        for ((tx, ty), pixels) in &tiles.tiles {
+            root = root.child(
+                el().key(format!("ink-{}-{tx}-{ty}", stroke.id)).size(side, side)
+                    .pin(Some(*tx as f32 * side), Some(*ty as f32 * side), None, None)
+                    .pixels(pixels).opacity(alpha).motion(none),
+            );
         }
     }
-    shape
-}
-
-fn draw_line(shape: Shape, line: Vec<[f32; 2]>, width: f32, color: Color) -> Shape {
-    if line.len() == 2 && line[0] == line[1] {
-        shape.line(line[0], line[1], width, LineCap::Round, color)
-    } else {
-        shape.stroke(line, width, color)
-    }
+    root
 }
 
 fn hand(root: El, s: &Screen, style: &str, p: [f32; 2], size: f32, shadow: bool, scale: f32) -> El {
@@ -598,6 +598,70 @@ fn volume_tray(on: bool, volume: f32) -> El {
             }))
         .child(slider)
         .child(text(format!("{:.0} %", shown * 100.0)).w(40.0).font(rune::tok::TextStyle::new(12.5, 600.0)).color(Color::WHITE.alpha(0.75)))
+}
+
+/// Scenes for checking the drawing and the laser without a desktop:
+/// `waypointer --snap out.png --scene ink` (or `laser`), with `--scale 2` for a HiDPI screen.
+pub fn preview_spec() -> rune::AppSpec<Screen> {
+    rune::AppSpec {
+        scenes: &[("ink", preview_ink), ("laser", preview_laser)],
+        ..rune::AppSpec::new("Waypointer", (900.0, 560.0), || Screen::new(Hub::new(crate::settings::Settings::default()), 0), preview_view)
+    }
+}
+
+/// The overlay over a light and a dark half, as over a slide and a dark app.
+fn preview_view(s: &Screen, cx: &mut Cx<Screen>) -> El {
+    el().w_full().h_full()
+        .child(row().w_full().h_full().pin(Some(0.0), Some(0.0), None, None)
+            .child(el().grow(1.0).h_full().fill(Color { r: 0.93, g: 0.93, b: 0.94, a: 1.0 }))
+            .child(el().grow(1.0).h_full().fill(Color { r: 0.11, g: 0.11, b: 0.13, a: 1.0 })))
+        .child(view(s, cx).pin(Some(0.0), Some(0.0), None, None))
+}
+
+pub fn is_preview(scene: &str) -> bool {
+    matches!(scene, "ink" | "laser")
+}
+
+/// Like a mouse: whole pixels.
+fn mouse(points: impl Iterator<Item = [f32; 2]>) -> Vec<[f32; 2]> {
+    points.map(|p| [p[0].round(), p[1].round()]).collect()
+}
+
+fn preview_stroke(s: &mut Screen, points: Vec<[f32; 2]>, color: u32, arrow: bool) {
+    let mut stroke = Stroke::new(points[0], hands::rgb(color), 6.0);
+    for p in &points[1..] {
+        stroke.add(*p);
+    }
+    stroke.set_arrow(arrow);
+    stroke.finished = Some(0.0);
+    s.strokes.push(stroke);
+}
+
+fn preview_ink(s: &mut Screen) {
+    // Loops, a ring around something, an arrow and a slow diagonal.
+    let loops = mouse((0..520).map(|i| {
+        let a = i as f32 * 0.03;
+        [90.0 + a * 22.0 + 34.0 * a.cos(), 130.0 + 30.0 * a.sin()]
+    }));
+    preview_stroke(s, loops, hands::RED, false);
+    let ring = mouse((0..400).map(|i| {
+        let a = 0.4 + i as f32 * 0.0155;
+        [660.0 + 150.0 * a.cos(), 330.0 + 85.0 * a.sin()]
+    }));
+    preview_stroke(s, ring, 0x0A84FF, false);
+    let arrow = mouse((0..300).map(|i| {
+        let t = i as f32 / 299.0;
+        [110.0 + 380.0 * t, 470.0 - 160.0 * t - 70.0 * (t * std::f32::consts::PI).sin()]
+    }));
+    preview_stroke(s, arrow, 0x30C25A, true);
+    let stairs = mouse((0..180).map(|i| [560.0 + i as f32 * 1.3, 470.0 + i as f32 * 0.35]));
+    preview_stroke(s, stairs, 0xFFCC00, false);
+}
+
+fn preview_laser(s: &mut Screen) {
+    s.hub = Hub::new(crate::settings::Settings { pointer: hands::LASER.into(), ..Default::default() });
+    // On the edge of the two halves.
+    s.pointer = Some([450.0, 280.0]);
 }
 
 #[cfg(test)]

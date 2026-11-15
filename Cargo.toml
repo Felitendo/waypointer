@@ -15,6 +15,7 @@ ksni = { version = "0.3", default-features = false, features = ["blocking", "asy
 rodio = { version = "0.23", default-features = false, features = ["playback", "wav"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tiny-skia = { version = "0.11", default-features = false, features = ["std", "simd"] }
 wayland-backend = { version = "0.3", features = ["client_system"] }
 wayland-client = "0.31"
 wayland-scanner = "0.31"
