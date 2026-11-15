@@ -50,7 +50,10 @@ up in public: keep them clear.
    something that breaks or needs the user to act → major.
 2. Bump the version in `Cargo.toml` (and `Cargo.lock`) and add the entry at the top of
    `CHANGELOG.md`, in one commit (`chore: 0.2.0`).
-3. Push, then push the tag: `git tag v0.2.0 && git push origin main v0.2.0`.
+3. Push, then push the tag: `git tag v0.2.0 && git push origin main v0.2.0`. The `release`
+   workflow makes the GitHub release (notes from `.github/release-notes.sh`), builds the
+   packages for Debian, Ubuntu, Fedora and Arch and fills the APT and RPM repositories on
+   GitHub Pages. Don't make the release by hand. More in `packaging/README.md`.
 
 A minor or major release (has `### Highlights`, gets a heading):
 

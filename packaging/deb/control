@@ -1,0 +1,19 @@
+Package: waypointer
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: @ARCH@
+Maintainer: Felitendo <felitendoyt@gmail.com>
+Depends: @DEPENDS@, libwayland-client0, libfontconfig1, libvulkan1, mesa-vulkan-drivers | vulkan-icd, hicolor-icon-theme
+Recommends: xdg-desktop-portal
+Homepage: https://github.com/Felitendo/waypointer
+Description: tiny hand on a stick that points at things on your screen
+ Turn it on and your cursor becomes a toy hand on a stick. Click to tap, drag
+ to draw, and nothing underneath gets clicked. Great for screen shares,
+ recordings and presentations. The Linux version of TinyHand for macOS.
+ .
+ A toolbar at the bottom picks one of 36 hands or a laser dot, the ink colour
+ and the volume of the tap sound. On KDE Plasma it also has global shortcuts,
+ holding Alt to click for real, and a double tap on Shift to let clicks through.
+ It needs a Wayland desktop with layer-shell, such as KDE Plasma, Hyprland or
+ Sway.
