@@ -211,14 +211,33 @@ impl Hub {
         hands::BUILT_IN.iter().find(|b| b.id == id).map(|b| tr(b.title).to_string()).unwrap_or_else(|| id.to_string())
     }
 
+    /// The colour a pointer draws in: the one the user picked for it, or its own.
     pub fn ink_of(&self, id: &str) -> rune::Color {
+        let picked = self.with_settings(|s| s.inks.get(id).copied());
+        hands::rgb(picked.unwrap_or_else(|| self.own_ink(id)))
+    }
+
+    /// A pointer's own colour, as `0xRRGGBB`.
+    pub fn own_ink(&self, id: &str) -> u32 {
         if id == hands::LASER {
-            return hands::rgb(hands::RED);
+            return hands::RED;
         }
         if let Some(c) = self.custom.lock().unwrap().iter().find(|c| c.id == id) {
-            return hands::rgb(c.ink);
+            return c.ink;
         }
-        hands::rgb(hands::BUILT_IN.iter().find(|b| b.id == id).map(|b| b.ink).unwrap_or(0x8754F2))
+        hands::BUILT_IN.iter().find(|b| b.id == id).map(|b| b.ink).unwrap_or(0x8754F2)
+    }
+
+    /// Picks the colour a pointer draws in, or `None` for its own. The ink follows the pointer
+    /// again, or the pick wouldn't show.
+    pub fn set_ink_of(&self, id: &str, ink: Option<u32>) {
+        self.change(|s| {
+            match ink {
+                Some(c) => s.inks.insert(id.to_string(), c),
+                None => s.inks.remove(id),
+            };
+            s.ink = "match".into();
+        });
     }
 
     /// The colour lines are drawn in: the user's pick, or the pointer's own.

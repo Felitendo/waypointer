@@ -58,6 +58,8 @@ pub struct Settings {
     pub ink: String,
     /// A ring spreads where you click or start a line.
     pub ripples: bool,
+    /// The colour each pointer draws in, where the user picked one: its id, then `0xRRGGBB`.
+    pub inks: std::collections::BTreeMap<String, u32>,
     /// A language code, or "system".
     pub language: String,
     pub show_toolbar: bool,
@@ -85,6 +87,7 @@ impl Default for Settings {
             double_shift: true,
             ink: "match".into(),
             ripples: true,
+            inks: Default::default(),
             language: "system".into(),
             show_toolbar: true,
             show_ink_button: true,

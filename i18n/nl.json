@@ -30,7 +30,7 @@
  "Clear Drawing": "Tekening wissen",
  "Clear the drawing": "Tekening wissen",
  "Click": "Klik",
- "Click a pointer to add it to the toolbar or take it out.": "Klik op een aanwijzer om hem aan de balk toe te voegen of eruit te halen.",
+ "Drag a pointer into the toolbar above. Click one to pick its colour.": "Sleep een aanwijzer naar de balk hierboven. Klik erop om zijn kleur te kiezen.",
  "Click a sound to hear it. It plays each time the hand taps.": "Klik op een geluid om het te horen. Het speelt elke keer als de hand tikt.",
  "Click again to reset": "Klik nog eens om te herstellen",
  "Click for real while holding": "Echt klikken terwijl je vasthoudt",
@@ -197,6 +197,8 @@
  "{} is ready. Add it to the toolbar above.": "{} is klaar. Voeg hem hierboven aan de balk toe.",
  "{} of {} places. Drag to reorder, drag out to take one out.": "{} van {} plekken. Sleep om te ordenen, of uit de balk om er een weg te halen.",
  "‹ Pointers": "‹ Aanwijzers",
+ "Add {} to the toolbar": "{} aan de balk toevoegen",
+ "Its own colour": "Eigen kleur",
  "Ring where you click": "Ring bij klikken",
  "A ring spreads where you click or start a line.": "Waar je klikt of een lijn begint, verschijnt een ring."
 }

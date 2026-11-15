@@ -59,8 +59,10 @@ pub struct Ui {
     pin_slots: Vec<[f32; 4]>,
     /// Where the toolbar row is, from layout.
     pin_area: Option<[f32; 4]>,
-    /// The last press on a pointer was a drag, so it takes nothing out.
+    /// The last press on a pointer was a drag, so it opens nothing.
     pin_dragged: bool,
+    /// The pointer whose colours show, and the key of what was clicked.
+    ink_for: Option<(String, String)>,
     idea: TextEdit,
     hand_name: TextEdit,
     draft: Option<Draft>,
@@ -82,6 +84,7 @@ impl Ui {
             pin_slots: Vec::new(),
             pin_area: None,
             pin_dragged: false,
+            ink_for: None,
             idea: TextEdit::new(""),
             hand_name: TextEdit::new(""),
             draft: None,
@@ -97,6 +100,10 @@ pub fn spec() -> AppSpec<Ui> {
         scenes: &[
             ("general", |s| s.page = Page::General),
             ("pointers", |s| s.page = Page::Pointers),
+            ("pointer-ink", |s| {
+                s.page = Page::Pointers;
+                s.ink_for = Some(("glove".into(), "pinned-glove".into()));
+            }),
             ("appearance", |s| s.page = Page::Appearance),
             ("drawing", |s| s.page = Page::Drawing),
             ("sound", |s| s.page = Page::Sound),
@@ -130,7 +137,7 @@ fn view(s: &Ui, cx: &mut Cx<Ui>) -> El {
         Page::About => about(p),
         Page::MakeHand => make_hand(p, s),
     };
-    row().key("window").w_full().h_full().fill(p.t.bg)
+    let mut root = row().key("window").w_full().h_full().fill(p.t.bg)
         .child(sidebar(p, s.page))
         .child(el().key("divider").w(p.hair).h_full().fill(p.t.separator))
         .child(
@@ -143,7 +150,16 @@ fn view(s: &Ui, cx: &mut Cx<Ui>) -> El {
                         // removal one of its own that lands at once.
                         .springs(SpringPair::new(Spring::new(0.28, 0.0), Spring::NONE)),
                 )),
-        )
+        );
+    // A pointer's colours, under it; a press anywhere else closes them.
+    if s.page == Page::Pointers
+        && let Some((id, anchor)) = &s.ink_for
+    {
+        root = root
+            .child(el().key("ink-scrim").absolute(0.0, 0.0).w_full().h_full().on_press(|s: &mut Ui| s.ink_for = None))
+            .child(ink_popover(p, s, id).anchored(anchor.as_str(), rune::Side::Bottom, rune::Align::Center, 6.0));
+    }
+    root
 }
 
 fn select(s: &mut Ui, page: Page) {
@@ -438,6 +454,49 @@ fn general(p: Paint, s: &Ui, st: &settings::Settings) -> El {
 
 // --- Pointers -------------------------------------------------------------------------------
 
+/// The pointer at place `i` of the toolbar row now.
+fn pinned_id(s: &Ui, i: usize) -> String {
+    s.hub.pinned().get(i).cloned().unwrap_or_default()
+}
+
+/// Under a clicked pointer: the colour it draws in, and whether it is in the toolbar.
+fn ink_popover(p: Paint, s: &Ui, id: &str) -> El {
+    let picked = s.hub.with_settings(|st| st.inks.get(id).copied());
+    let mut dots = row().key("pointer-inks").gap(4.0).center_y()
+        .child(swatch(p, id, "own", s.hub.own_ink(id), tr("Its own colour"), picked.is_none(), None))
+        .child(el().size(p.hair, 20.0).mx(4.0).fill(p.t.separator));
+    for (cid, title, rgb) in INKS.iter().filter(|i| i.0 != "match") {
+        dots = dots.child(swatch(p, id, cid, *rgb, tr(title), picked == Some(*rgb), Some(*rgb)));
+    }
+    let name = s.hub.title(id);
+    let label = if s.hub.pinned().iter().any(|x| x == id) { trf("Take {} out of the toolbar", &[&name]) } else { trf("Add {} to the toolbar", &[&name]) };
+    let take = id.to_string();
+    col().key("ink-popover").padding(12.0).gap(12.0).radius(radius::LG).fill(p.t.card).border(p.hair, p.t.card_border)
+        .shadow(8.0, 24.0, p.t.shadow).transition(Transition::scale(0.96).combined(Transition::opacity()))
+        .child(text(name).font(type_::TITLE).color(p.t.text))
+        .child(dots)
+        .child(button(p, "ink-popover-pin", &label, false).on_press(move |s: &mut Ui| {
+            pin(s, &take);
+            s.ink_for = None;
+        }))
+}
+
+/// The edge of a colour dot, so black shows on a dark card and white on a light one.
+fn rim(p: Paint) -> Color {
+    if p.dark { Color::WHITE.alpha(0.22) } else { Color::BLACK.alpha(0.12) }
+}
+
+/// One colour to pick for pointer `id`: `ink` is `None` for its own.
+fn swatch(p: Paint, id: &str, key: &str, rgb: u32, label: &str, on: bool, ink: Option<u32>) -> El {
+    let (d, ring) = (22.0, 30.0);
+    let id = id.to_string();
+    el().key(format!("pointer-ink-{key}")).size(ring, ring).radius(ring / 2.0).center()
+        .border(2.0, if on { p.accent } else { Color::TRANSPARENT })
+        .role("radio").label(label).checked(on).focusable(true).help(label).press_scale(0.88)
+        .on_press(move |s: &mut Ui| s.hub.set_ink_of(&id, ink))
+        .child(el().size(d, d).radius(d / 2.0).fill(hands::rgb(rgb)).border(p.hair, rim(p)))
+}
+
 fn thumb(s: &Ui, id: &str, size: f32) -> El {
     if id == hands::LASER {
         let red = hands::rgb(hands::RED);
@@ -574,6 +633,17 @@ fn drop_pin(s: &mut Ui, g: &PinDrag, over: bool) {
     s.hub.change(|st| st.pinned = pinned);
 }
 
+/// A click on a pointer, not a drag: its colours open, or close again.
+fn open_ink(s: &mut Ui, id: &str, key: &str) {
+    if std::mem::take(&mut s.pin_dragged) {
+        return;
+    }
+    s.ink_for = match &s.ink_for {
+        Some((open, _)) if open == id => None,
+        _ => Some((id.to_string(), key.to_string())),
+    };
+}
+
 fn pin(s: &mut Ui, id: &str) {
     let mut pinned = s.hub.pinned();
     if let Some(i) = pinned.iter().position(|p| p == id) {
@@ -600,10 +670,11 @@ fn pointers(p: Paint, s: &Ui, st: &settings::Settings) -> El {
     for (i, id) in pinned.iter().enumerate() {
         let current = *id == st.pointer;
         let lifted = drag.is_some_and(|g| g.out && g.from == Some(i));
-        let (pick, take) = (id.clone(), id.clone());
-        let mut item = col().key(format!("pinned-{id}")).w(72.0).gap(4.0).center().padding(6.0).radius(radius::LG)
+        let key = format!("pinned-{id}");
+        let (pick, click) = (id.clone(), key.clone());
+        let mut item = col().key(key).w(72.0).gap(4.0).center().padding(6.0).radius(radius::LG)
             .fill(if lifted { p.t.card } else if current { p.accent.alpha(0.14) } else { Color::TRANSPARENT })
-            .hover(p.t.hover).press_scale(0.95).help(trf("Take {} out of the toolbar", &[&s.hub.title(id)]))
+            .hover(p.t.hover).press_scale(0.95).help(s.hub.title(id))
             .on_layout(move |s: &mut Ui, r| {
                 if s.pin_slots.len() <= i {
                     s.pin_slots.resize(i + 1, [0.0; 4]);
@@ -611,11 +682,7 @@ fn pointers(p: Paint, s: &Ui, st: &settings::Settings) -> El {
                 s.pin_slots[i] = r;
             })
             .on_drag(move |s: &mut Ui, d: &mut Drag, tx| drag_pin(s, &pick.clone(), Some(i), d, tx))
-            .on_press(move |s: &mut Ui| {
-                if !std::mem::take(&mut s.pin_dragged) {
-                    pin(s, &take);
-                }
-            })
+            .on_press(move |s: &mut Ui| open_ink(s, &pinned_id(s, i), &click))
             .child(thumb(s, id, 48.0))
             .child(text(s.hub.title(id)).font(rune::tok::TextStyle::new(11.0, 500.0)).color(p.t.text_secondary).truncate());
         if let Some(g) = drag {
@@ -655,15 +722,12 @@ fn pointers(p: Paint, s: &Ui, st: &settings::Settings) -> El {
     for id in s.hub.styles() {
         let is_pinned = pinned.contains(&id);
         let lifted = drag.is_some_and(|g| !g.out && g.id == id);
-        let (pick, take) = (id.clone(), id.clone());
-        let mut tile = el().key(format!("tile-{id}")).size(64.0, 64.0).center().radius(radius::LG)
+        let key = format!("tile-{id}");
+        let (pick, click, open) = (id.clone(), key.clone(), id.clone());
+        let mut tile = el().key(key).size(64.0, 64.0).center().radius(radius::LG)
             .hover(p.t.hover).press_scale(0.92).help(s.hub.title(&id))
             .on_drag(move |s: &mut Ui, d: &mut Drag, tx| drag_pin(s, &pick, None, d, tx))
-            .on_press(move |s: &mut Ui| {
-                if !std::mem::take(&mut s.pin_dragged) {
-                    pin(s, &take);
-                }
-            })
+            .on_press(move |s: &mut Ui| open_ink(s, &open, &click))
             .child(thumb(s, &id, 50.0));
         if lifted && let Some(g) = drag {
             tile = tile.offset(g.d[0], g.d[1]).offset_motion(rune::Anim::INSTANT).raise().cursor(rune::Cursor::Grabbing)
@@ -680,7 +744,7 @@ fn pointers(p: Paint, s: &Ui, st: &settings::Settings) -> El {
     g = g.child(col().key("all-section").gap(space::S2)
         .child(text(tr("All pointers")).font(type_::SECTION).color(p.t.text_secondary).ml(space::S3))
         .child(col().fill(p.t.card).radius(radius::LG).border(p.hair, p.t.card_border).shadow(1.0, 2.0, p.t.shadow).child(grid))
-        .child(text(tr("Click a pointer to add it to the toolbar or take it out.")).font(type_::LABEL).color(p.t.text_secondary).ml(space::S3)));
+        .child(text(tr("Drag a pointer into the toolbar above. Click one to pick its colour.")).font(type_::LABEL).color(p.t.text_secondary).ml(space::S3)));
 
     let mut yours = row().key("yours").gap(6.0).padding(space::S3).flex_wrap();
     for c in s.hub.custom_hands() {
@@ -821,7 +885,7 @@ fn drawing(p: Paint, st: &settings::Settings) -> El {
             .radius(ring / 2.0).border(2.0, p.accent).lead(Spring::new(0.22, 0.0), Spring::new(0.3, 0.0)).a11y_hidden());
     for (i, (id, title, rgb)) in INKS.iter().enumerate() {
         let dot = if *id == "match" { icons::rainbow(d) } else {
-            el().size(d, d).radius(d / 2.0).fill(hands::rgb(*rgb)).border(p.hair, Color::BLACK.alpha(if p.dark { 0.0 } else { 0.12 }))
+            el().size(d, d).radius(d / 2.0).fill(hands::rgb(*rgb)).border(p.hair, rim(p))
         };
         let choice = id.to_string();
         swatches = swatches.child(dot.key(format!("ink-{id}")).role("radio").label(tr(title)).checked(i == current).focusable(true)
@@ -1078,8 +1142,19 @@ mod tests {
         want.insert(2, first);
         assert_eq!(hub.pinned(), want, "the drop put it in the third place, and took nothing out");
 
-        click(&mut rt, &format!("pinned-{}", want[1]));
-        assert_eq!(hub.pinned().len(), before.len() - 1, "a click still takes one out");
+        let id = want[1].clone();
+        click(&mut rt, &format!("pinned-{id}"));
+        assert!(rt.find("ink-popover").is_some(), "a click opens its colours");
+        assert_eq!(hub.pinned(), want, "and takes nothing out");
+        click(&mut rt, "pointer-ink-blue");
+        assert_eq!(hub.settings().inks.get(&id), Some(&0x0A84FF), "it draws blue now");
+        assert_eq!(hub.settings().ink, "match", "the ink follows the pointer, so that shows");
+        click(&mut rt, "pointer-ink-own");
+        assert!(!hub.settings().inks.contains_key(&id), "and in its own colour again");
+        rt.pointer_down(20.0, 590.0);
+        rt.pointer_up(20.0, 590.0);
+        frames(&mut rt, 30);
+        assert!(rt.find("ink-popover").is_none(), "a press elsewhere closes it");
     }
 
     fn click(rt: &mut Runtime<Ui>, key: &str) {
@@ -1111,6 +1186,7 @@ mod tests {
         let after = hub.pinned();
         assert_eq!(after.len(), before.len() + 1);
         assert_eq!(after[1], "pink", "it went in before the one it was dropped on: {after:?}");
+        assert!(rt.find("ink-popover").is_none(), "a drag opens no colours");
 
         let (px, py) = rt.find("pinned-pink").unwrap();
         drag(&mut rt, (px, py), (px, py + 260.0));

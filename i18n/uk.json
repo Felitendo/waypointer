@@ -30,7 +30,7 @@
  "Clear Drawing": "Стерти малюнок",
  "Clear the drawing": "Стерти малюнок",
  "Click": "Клік",
- "Click a pointer to add it to the toolbar or take it out.": "Натисни на вказівник, щоб додати його на панель або прибрати.",
+ "Drag a pointer into the toolbar above. Click one to pick its colour.": "Перетягни вказівник на панель вище. Натисни на вказівник, щоб вибрати його колір.",
  "Click a sound to hear it. It plays each time the hand taps.": "Натисни на звук, щоб послухати. Він лунає щоразу, коли рука торкається.",
  "Click again to reset": "Натисни ще раз, щоб скинути",
  "Click for real while holding": "Справжнє клацання, поки утримуєш",
@@ -197,6 +197,8 @@
  "{} is ready. Add it to the toolbar above.": "{} готова. Додай її на панель вище.",
  "{} of {} places. Drag to reorder, drag out to take one out.": "Місць зайнято: {} з {}. Перетягни, щоб змінити порядок, або за панель, щоб прибрати.",
  "‹ Pointers": "‹ Вказівники",
+ "Add {} to the toolbar": "Додати {} на панель",
+ "Its own colour": "Власний колір",
  "Ring where you click": "Кільце при натисканні",
  "A ring spreads where you click or start a line.": "Там, де ти натискаєш або починаєш лінію, розходиться кільце."
 }

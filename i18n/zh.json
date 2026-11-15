@@ -30,7 +30,7 @@
  "Clear Drawing": "清除绘图",
  "Clear the drawing": "清除绘图",
  "Click": "咔哒",
- "Click a pointer to add it to the toolbar or take it out.": "点击指针可将其加入工具栏或移出。",
+ "Drag a pointer into the toolbar above. Click one to pick its colour.": "把指针拖到上方的工具栏。点击指针可选择它的颜色。",
  "Click a sound to hear it. It plays each time the hand taps.": "点击音效即可试听。手每次轻点时都会播放。",
  "Click again to reset": "再次点击以重置",
  "Click for real while holding": "按住时真正点击",
@@ -197,6 +197,8 @@
  "{} is ready. Add it to the toolbar above.": "{} 已就绪。请在上方把它加入工具栏。",
  "{} of {} places. Drag to reorder, drag out to take one out.": "已用 {}/{} 个位置。拖动可调整顺序，拖出工具栏可移除。",
  "‹ Pointers": "‹ 指针",
+ "Add {} to the toolbar": "将 {} 加入工具栏",
+ "Its own colour": "原本的颜色",
  "Ring where you click": "点击光环",
  "A ring spreads where you click or start a line.": "在你点击或开始画线的地方会扩散一圈光环。"
 }

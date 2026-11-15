@@ -30,7 +30,7 @@
  "Clear Drawing": "Effacer le dessin",
  "Clear the drawing": "Effacer le dessin",
  "Click": "Clic",
- "Click a pointer to add it to the toolbar or take it out.": "Clique sur un pointeur pour l'ajouter à la barre ou l'en retirer.",
+ "Drag a pointer into the toolbar above. Click one to pick its colour.": "Glisse un pointeur dans la barre ci-dessus. Clique sur un pointeur pour choisir sa couleur.",
  "Click a sound to hear it. It plays each time the hand taps.": "Clique sur un son pour l'écouter. Il joue chaque fois que la main tape.",
  "Click again to reset": "Clique encore pour réinitialiser",
  "Click for real while holding": "Vrai clic tant que tu maintiens",
@@ -197,6 +197,8 @@
  "{} is ready. Add it to the toolbar above.": "{} est prête. Ajoute-la à la barre plus haut.",
  "{} of {} places. Drag to reorder, drag out to take one out.": "{} places sur {}. Glisse pour réordonner, ou hors de la barre pour en retirer un.",
  "‹ Pointers": "‹ Pointeurs",
+ "Add {} to the toolbar": "Ajouter {} à la barre",
+ "Its own colour": "Sa couleur d’origine",
  "Ring where you click": "Anneau au clic",
  "A ring spreads where you click or start a line.": "Un anneau s’étend là où tu cliques ou commences une ligne."
 }

@@ -30,7 +30,7 @@
  "Clear Drawing": "그림 지우기",
  "Clear the drawing": "그림 지우기",
  "Click": "딸깍",
- "Click a pointer to add it to the toolbar or take it out.": "포인터를 클릭해 도구 모음에 추가하거나 뺍니다.",
+ "Drag a pointer into the toolbar above. Click one to pick its colour.": "포인터를 위의 도구 모음으로 끌어 놓으세요. 클릭하면 색을 고를 수 있습니다.",
  "Click a sound to hear it. It plays each time the hand taps.": "소리를 클릭하면 들어 볼 수 있습니다. 손이 탭할 때마다 납니다.",
  "Click again to reset": "한 번 더 클릭하면 초기화",
  "Click for real while holding": "누르고 있는 동안 진짜 클릭",
@@ -197,6 +197,8 @@
  "{} is ready. Add it to the toolbar above.": "{}이(가) 준비됐습니다. 위에서 도구 모음에 추가하세요.",
  "{} of {} places. Drag to reorder, drag out to take one out.": "{}/{} 자리 사용 중. 끌어서 순서를 바꾸고, 밖으로 끌면 뺍니다.",
  "‹ Pointers": "‹ 포인터",
+ "Add {} to the toolbar": "도구 모음에 {} 넣기",
+ "Its own colour": "원래 색",
  "Ring where you click": "클릭 고리",
  "A ring spreads where you click or start a line.": "클릭하거나 선을 시작한 곳에 고리가 퍼집니다."
 }
