@@ -28,7 +28,14 @@ nothing underneath gets clicked. Great for screen shares, recordings and present
 
 ## Install
 
-There is no package yet. Build it from source:
+On Arch Linux and the distributions built on it, Waypointer is in the
+[AUR](https://aur.archlinux.org/packages/waypointer):
+
+```bash
+yay -S waypointer
+```
+
+Or build it from source:
 
 ```bash
 sudo pacman -S --needed rust libxkbcommon wayland
