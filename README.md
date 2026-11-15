@@ -67,11 +67,15 @@ reach the windows and the hand stays, until you click it or double-tap again. Cl
 to mute the tap sound. Rest the pointer on either to pick the ink colour or set the volume. The
 panels stay usable with the normal cursor.
 
+<p align="center">
+  <img src="res/screenshots/toolbar.png" alt="The toolbar with its pointers, the ink button, the speaker and the close button, and the ink colours open above it" width="527">
+</p>
+
 You can make your own hand too: describe it, let ChatGPT or another image tool draw it, and
 pick the PNG. Waypointer checks it and puts it on a stick.
 
 <p align="center">
-  <img src="res/screenshots/settings.png" alt="The Pointers page of the settings: the toolbar's pointers and all 37 to pick from" width="640">
+  <img src="res/screenshots/settings.png" alt="The Pointers page of the settings: the toolbar's pointers, all 37 to pick from, and the colours of the Cursor glove" width="640">
 </p>
 
 Every setting is in the settings window: shortcuts, which key clicks for real, the toolbar,
@@ -79,6 +83,10 @@ the pointer size, the ink, the tap sound and its volume. On the **Pointers** pag
 pointers into the toolbar, out of it, or into a new order. Click one to pick the colour it
 draws in. On the **Drawing** page you pick the ink, how long drawings stay, and whether a ring
 spreads where you click.
+
+<p align="center">
+  <img src="res/screenshots/drawing.png" alt="The Drawing page of the settings: the ink colour, the ring where you click, and how long drawings stay" width="640">
+</p>
 
 ## Desktops
 

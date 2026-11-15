@@ -32,6 +32,7 @@ written in Rust and drawn with [Rune](https://github.com/anomalyco/rune) (pinned
 - `src/ink.rs`, `src/hands.rs`, `src/art.rs`: lines, the hand pictures, GPU-ready pictures.
 - `src/raster.rs`: draws the lines with tiny-skia, in tiles. Rune's own strokes are one
   capsule per segment and look stepped on a hand-drawn line.
+- `src/i18n.rs`, `i18n/*.json`: translations. New text goes into every catalog, a test checks.
 - `src/handmaker.rs`: the user's own hands from a PNG.
 - `src/ui.rs`, `src/icons.rs`: the settings window.
 - `src/platform.rs`: D-Bus: the API, KGlobalAccel, KWin scripts, lock and sleep.
@@ -94,10 +95,13 @@ belong to the user.
 - Point a run at files of its own: `WP_CONFIG=<file>` for the settings, `WP_HANDS_DIR=<dir>`
   for the user's hands, `WP_DATA_DIR=<dir>` for hands and sounds.
 - Check how the settings window looks without opening it: `waypointer --snap out.png --scene
-  pointers` (scenes: general, pointers, appearance, drawing, sound, about, make-hand). The
-  scenes `ink` and `laser` show the drawing and the laser over a light and a dark half; add
-  `--scale 2` for a HiDPI screen. Debug builds have Rune's other headless tools too (`--tree`,
-  `--script`).
+  pointers` (scenes: general, pointers, pointer-ink, appearance, drawing, sound, about,
+  make-hand). The scenes `ink` and `laser` show the drawing and the laser over a light and a
+  dark half, `toolbar` the toolbar with its colours open; add `--scale 2` for a HiDPI screen.
+  Debug builds have Rune's other headless tools too (`--tree`, `--script`).
+- README screenshots of the settings window: `--scene <name>` without `--snap` opens the real
+  window in that state, next to the installed Waypointer (no D-Bus, tray or shortcuts). Make it
+  the active window through KWin by its pid, then `spectacle -b -n -a -o out.png`.
 - A live run on the desktop only with a time limit (`timeout 60 target/debug/waypointer
   --autostart`), and quit the installed Waypointer first: only one runs at a time. The
   overlay takes every click while it is on; Esc or `waypointer off` turns it off.
