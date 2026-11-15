@@ -4,12 +4,12 @@
 //! panels stay usable with the normal cursor, like the menu bar on the Mac.
 
 use std::cell::RefCell;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
 use rune::tok::motion;
-use rune::{Color, Cursor, Cx, Drag, El, Phase, Shape, Transition, Tx, canvas, col, el, row, text};
+use rune::{Color, Cursor, Cx, Drag, El, Phase, Transition, Tx, col, el, row, text};
 
 use crate::arm::{self, Motion};
 use crate::hands;
@@ -18,8 +18,6 @@ use crate::ink::{self, Stroke};
 use crate::raster::{self, StrokeTiles};
 
 const BAR_GAP: f32 = 14.0;
-/// How long the laser's trail glows behind it.
-const TRAIL_SECONDS: f64 = 0.45;
 const GLASS: Color = Color { r: 0.075, g: 0.075, b: 0.09, a: 0.88 };
 const EDGE: Color = Color { r: 1.0, g: 1.0, b: 1.0, a: 0.09 };
 
@@ -54,7 +52,6 @@ pub struct Screen {
     hint: Vec<(String, String)>,
     hint_until: f64,
     ripples: Vec<Ripple>,
-    trail: VecDeque<([f32; 2], f64)>,
     now: f64,
     last_poll: Option<f64>,
     /// The drawing's pictures, by stroke. Drawn in `view`, which knows the scale.
@@ -84,7 +81,6 @@ impl Screen {
             hint: Vec::new(),
             hint_until: 0.0,
             ripples: Vec::new(),
-            trail: VecDeque::new(),
             now: 0.0,
             last_poll: None,
             pictures: RefCell::new(HashMap::new()),
@@ -105,7 +101,6 @@ impl Screen {
         self.volume_open = false;
         self.reveal_until = now + 3.0;
         self.ripples.clear();
-        self.trail.clear();
         if let Some(hint) = hint {
             self.show_hint(hint, now, 10.0);
             self.reveal_until = now + 10.0;
@@ -119,7 +114,6 @@ impl Screen {
         self.drawing = false;
         self.hint.clear();
         self.ripples.clear();
-        self.trail.clear();
     }
 
     pub fn show_hint(&mut self, hint: Vec<(String, String)>, now: f64, seconds: f64) {
@@ -173,9 +167,6 @@ impl Screen {
             self.reveal_until = self.reveal_until.max(tx.clock() + 1.5);
         }
         self.pointer = Some(at);
-        if self.hub.style() == hands::LASER {
-            self.trail.push_back((at, tx.clock()));
-        }
         tx.wake_after(Duration::ZERO);
     }
 
@@ -275,13 +266,6 @@ pub fn poll(s: &mut Screen, t: f64, tx: &mut Tx) -> bool {
         s.ripples.retain(|r| t - r.born < 0.45);
         changed = true;
         moving = true;
-    }
-    if !s.trail.is_empty() {
-        while s.trail.front().is_some_and(|(_, at)| t - at > TRAIL_SECONDS) {
-            s.trail.pop_front();
-        }
-        changed = true;
-        moving |= !s.trail.is_empty();
     }
     if !s.hint.is_empty() && t > s.hint_until {
         s.hint.clear();
@@ -427,39 +411,6 @@ fn laser(root: El, s: &Screen, p: [f32; 2], size: f32) -> El {
     let red = hands::rgb(hands::RED);
     let r = (s.size[1] * 0.0038 * size / 0.13).max(4.0) * (1.0 + 0.2 * s.motion.press);
     let none = rune_motion_none();
-    let mut root = root;
-    // A glowing trail behind the dot: a blurred red glow under a bright core, both fuller and
-    // brighter towards the dot. Drawn in a box around the trail, so the blur stays small.
-    if s.trail.len() > 1 {
-        let pad = r * 10.0;
-        let (mut x0, mut y0, mut x1, mut y1) = (f32::MAX, f32::MAX, f32::MIN, f32::MIN);
-        for (p, _) in &s.trail {
-            x0 = x0.min(p[0]);
-            y0 = y0.min(p[1]);
-            x1 = x1.max(p[0]);
-            y1 = y1.max(p[1]);
-        }
-        let (ox, oy) = (x0 - pad, y0 - pad);
-        let (w, h) = (x1 - x0 + 2.0 * pad, y1 - y0 + 2.0 * pad);
-        let points: Vec<([f32; 2], f64)> = s.trail.iter().map(|(p, t)| ([p[0] - ox, p[1] - oy], *t)).collect();
-        // In a few pieces by age, each one stroke, so joints don't add up into bright dots.
-        let pieces = 6;
-        let per = points.len().div_ceil(pieces).max(2);
-        let (mut glow, mut core) = (Shape::new(), Shape::new());
-        let mut i = 0;
-        while i + 1 < points.len() {
-            let chunk = &points[i..(i + per + 1).min(points.len())];
-            let age = ((s.now - chunk[chunk.len() - 1].1) / TRAIL_SECONDS) as f32;
-            let a = (1.0 - age).clamp(0.0, 1.0);
-            let line: Vec<[f32; 2]> = chunk.iter().map(|(p, _)| *p).collect();
-            glow = glow.stroke(line.clone(), r * (2.0 + 2.6 * a), red.alpha(0.75 * a));
-            core = core.stroke(line, r * (0.5 + 0.7 * a), Color { r: 1.0, g: 0.8, b: 0.74, a: 0.9 * a });
-            i += per;
-        }
-        root = root
-            .child(canvas(glow).key("trail-glow").size(w, h).pin(Some(ox), Some(oy), None, None).blur(r * 1.8).motion(none))
-            .child(canvas(core).key("trail-core").size(w, h).pin(Some(ox), Some(oy), None, None).motion(none));
-    }
     root.child(
         el().key("laser").size(2.0 * r, 2.0 * r).radius(r).fill(red)
             .shadow(0.0, r * (3.0 + 1.5 * s.motion.press), red.alpha(0.95))
